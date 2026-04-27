@@ -177,15 +177,18 @@ export default function Page() {
         }
 
         .textGrid {
-          position: absolute;
-          top: 14%;
-          left: 3%;
-          right: 3%;
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 36px;
-          text-align: center;
-        }
+         position: absolute;
+         top: 8%;
+         left: 50%;
+         transform: translateX(-50%);
+         width: 90%;
+         max-width: 1200px;
+
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 36px;
+        text-align: center;
+       }
 
         .feature {
           opacity: 0;
@@ -222,15 +225,14 @@ export default function Page() {
           line-height: 1.45;
           color: rgba(255,255,255,0.82);
         }
-
         .brandBlock {
-          position: absolute;
-          left: 50%;
-          bottom: 8%;
-          transform: translateX(-50%);
-          text-align: center;
-          width: min(980px, 92vw);
-        }
+         position: absolute;
+         top: 55%;
+         left: 50%;
+         transform: translate(-50%, -50%);
+         text-align: center;
+         width: min(900px, 92vw);
+        } 
 
         .eyebrow {
           font-size: 13px;
