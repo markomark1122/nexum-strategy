@@ -1,692 +1,681 @@
-"use client";
+"use client"
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import localFont from "next/font/local";
-import { Syne, DM_Sans } from "next/font/google";
-
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "800"],
-  variable: "--font-syne",
-});
-
-const dmSans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-dm",
-});
-
-export default function HomePage() {
-  const [liveCount, setLiveCount] = useState(231);
-  const liveRef = useRef(231);
-  const targetRef = useRef(231);
-
-  useEffect(() => {
-    function animateCount() {
-      if (liveRef.current < targetRef.current) {
-        liveRef.current++;
-        setLiveCount(liveRef.current);
-        setTimeout(animateCount, 120);
-      } else {
-        const wait = Math.floor(Math.random() * 18000) + 7000;
-        setTimeout(() => {
-          targetRef.current += Math.floor(Math.random() * 3) + 1;
-          animateCount();
-        }, wait);
-      }
-    }
-    const t = setTimeout(() => {
-      targetRef.current += 2;
-      animateCount();
-    }, 4000);
-    return () => clearTimeout(t);
-  }, []);
-
+export default function Page() {
   return (
-    <div className={`${syne.variable} ${dmSans.variable}`} style={styles.root}>
-      {/* NAV */}
-      <nav style={styles.nav}>
-        <div style={styles.logo}>
-          Nexum<span style={styles.logoAccent}>.</span>
-        </div>
-        <Link href="/scan" style={styles.navCta}>
-          Get Free Audit →
-        </Link>
-      </nav>
+    <main className="page">
+      <section className="hero">
+        <div className="heroOverlay" />
 
-      {/* LIVE BAR */}
-      <div style={styles.liveBar}>
-        <div style={styles.liveDot} />
-        <span style={styles.liveText}>Live right now —</span>
-        <span style={styles.liveCount}>{liveCount}</span>
-        <span style={styles.liveText}>stores audited this month</span>
-      </div>
+        <nav className="nav">
+          <a href="/" className="logo">
+            <span className="logoIcon">✦</span>
+            Nexum Strategy
+          </a>
 
-      {/* HERO */}
-      <section style={styles.hero}>
-        <div style={styles.heroGlow} />
-        <div style={styles.eyebrow}>
-          <div style={styles.eyebrowDot} />
-          Free AI Audit for Ecommerce Stores
-        </div>
-        <h1 style={styles.h1}>
-          Your store is losing money.<br />
-          <em style={styles.accent}>AI can stop it.</em>
-        </h1>
-        <p style={styles.heroSub}>
-          We audit your ecommerce business in 2 minutes and show you exactly
-          where AI can recover lost revenue — for free, no strings attached.
-        </p>
-        <div style={styles.ctaGroup}>
-          <Link href="/scan" style={styles.primaryBtn}>
-            Run My Free Audit →
-          </Link>
-          <span style={styles.trustLine}>
-            No credit card · No tool connection needed · Instant results
-          </span>
-        </div>
+          <a href="/scan" className="navCta">
+            Generate My Report
+          </a>
+        </nav>
 
-        {/* PREVIEW CARD */}
-        <div style={styles.heroPreview}>
-          <div style={styles.previewLabel}>
-            Example Audit Result — Shopify Store · $42k/mo revenue
-          </div>
-          <div style={styles.previewRow}>
-            {[
-              { label: "AI Score", val: "74", sub: "/100", color: "#5af7b0" },
-              { label: "Hours Lost/wk", val: "31", color: "#f7b25a" },
-              { label: "Est. Monthly Loss", val: "$6,200", color: "#fff", small: true },
-            ].map((m) => (
-              <div key={m.label} style={styles.previewMetric}>
-                <div style={styles.metricLabel}>{m.label}</div>
-                <div
-                  style={{
-                    ...styles.metricVal,
-                    color: m.color,
-                    fontSize: m.small ? "15px" : undefined,
-                    paddingTop: m.small ? "3px" : undefined,
-                  }}
-                >
-                  {m.val}
-                  {m.sub && (
-                    <span style={{ fontSize: "13px", opacity: 0.5 }}>{m.sub}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          {[
-            { label: "Abandoned Cart Recovery", impact: "High Impact", pct: "88%", color: "#5af7b0" },
-            { label: "Customer Support Automation", impact: "Medium", pct: "62%", color: "#f7b25a" },
-            { label: "Ad Targeting Optimization", impact: "Review", pct: "44%", color: "#f77b5a" },
-          ].map((b) => (
-            <div key={b.label} style={styles.barWrap}>
-              <div style={styles.barLabelRow}>
-                <span style={styles.barLabelLeft}>{b.label}</span>
-                <span style={{ ...styles.barLabelRight, color: b.color }}>{b.impact}</span>
-              </div>
-              <div style={styles.barTrack}>
-                <div style={{ ...styles.barFill, width: b.pct, background: b.color }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        <div className="heroContent">
+          <p className="eyebrow">AI AUTOMATION DIAGNOSTIC FOR ECOMMERCE</p>
 
-      <div style={styles.divider} />
+          <h1>
+            Find what your ecommerce business should automate first.
+          </h1>
 
-      {/* PAIN SECTION */}
-      <section style={styles.section}>
-        <div style={styles.sectionLabel}>The Problem</div>
-        <h2 style={styles.sectionTitle}>
-          Most stores bleed revenue in<br />the same 4 places
-        </h2>
-        <p style={styles.sectionSub}>
-          You&apos;re not failing — you&apos;re just running on manual when you should be
-          running on AI.
-        </p>
-        <div style={styles.painGrid}>
-          {[
-            {
-              icon: "🛒",
-              title: "Abandoned carts with no follow-up",
-              desc: "The average store loses 70% of carts. AI recovers them automatically.",
-            },
-            {
-              icon: "📦",
-              title: "Overstocking the wrong products",
-              desc: "Gut-feel inventory decisions cost stores thousands every quarter.",
-            },
-            {
-              icon: "💬",
-              title: "Support tickets eating your hours",
-              desc: "80% of support questions are the same. AI handles them in seconds.",
-            },
-            {
-              icon: "📣",
-              title: "Ad spend with no smart targeting",
-              desc: "Spray-and-pray ads. AI cuts waste and finds your best buyers.",
-            },
-          ].map((p) => (
-            <div key={p.title} style={styles.painCard}>
-              <div style={styles.painIcon}>{p.icon}</div>
-              <div style={styles.painTitle}>{p.title}</div>
-              <div style={styles.painDesc}>{p.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div style={styles.divider} />
-
-      {/* HOW IT WORKS */}
-      <section style={styles.section}>
-        <div style={styles.sectionLabel}>How It Works</div>
-        <h2 style={styles.sectionTitle}>
-          From zero to your AI roadmap<br />in under 2 minutes
-        </h2>
-        <p style={styles.sectionSub}>
-          No jargon. No fluff. Just a clear picture of where AI fits your store.
-        </p>
-        <div style={styles.stepsWrap}>
-          {[
-            {
-              n: "1",
-              title: "Tell us about your store",
-              desc: "Answer 6 quick questions about your platform, team size, tools you use, and biggest headaches. Takes under 90 seconds.",
-            },
-            {
-              n: "2",
-              title: "AI calculates your opportunity score",
-              desc: "Our model maps your answers against 50+ ecommerce AI use cases and ranks them by your ROI — not generic advice.",
-            },
-            {
-              n: "3",
-              title: "Get your personalized roadmap",
-              desc: "See exactly which automations to build first, what tools to use, and how much time and money you'll save — with a 30-day action plan.",
-            },
-          ].map((s) => (
-            <div key={s.n} style={styles.step}>
-              <div style={styles.stepNum}>{s.n}</div>
-              <div>
-                <div style={styles.stepTitle}>{s.title}</div>
-                <div style={styles.stepDesc}>{s.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* SOCIAL PROOF STATS */}
-      <div style={styles.socialProof}>
-        <div style={styles.statsRow}>
-          {[
-            { val: "$4.2k", label: "avg monthly savings identified per audit" },
-            { val: "2min", label: "average time to complete the audit" },
-            { val: "100%", label: "free — no catch, no credit card" },
-          ].map((s) => (
-            <div key={s.val} style={{ textAlign: "center" }}>
-              <span style={styles.bigStat}>{s.val}</span>
-              <div style={styles.bigStatLabel}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* TESTIMONIALS */}
-      <section style={styles.section}>
-        <div style={styles.sectionLabel}>What store owners say</div>
-        <div style={styles.testiGrid}>
-          {[
-            {
-              quote:
-                "I had no idea we were leaving $4k a month on the table just from abandoned carts. Nexum showed us exactly what to fix in 2 minutes.",
-              initials: "JM",
-              name: "Jake M.",
-              biz: "Apparel store · Shopify · $68k/mo",
-              result: "+$4,200/mo recovered",
-            },
-            {
-              quote:
-                "The audit flagged our support queue immediately. We were spending 22 hours a week answering the same questions. That's fixed now.",
-              initials: "SR",
-              name: "Sofia R.",
-              biz: "Beauty brand · WooCommerce · $31k/mo",
-              result: "22 hrs/week saved",
-            },
-            {
-              quote:
-                "Honestly thought AI was hype for small stores. The roadmap they gave us was specific and we implemented the first automation in one week.",
-              initials: "TK",
-              name: "Tom K.",
-              biz: "Home goods · Shopify · $89k/mo",
-              result: "3.1x ROAS improvement",
-            },
-          ].map((t) => (
-            <div key={t.name} style={styles.testiCard}>
-              <p style={styles.testiQuote}>&ldquo;{t.quote}&rdquo;</p>
-              <div style={styles.testiAuthor}>
-                <div style={styles.testiAvatar}>{t.initials}</div>
-                <div>
-                  <div style={styles.testiName}>{t.name}</div>
-                  <div style={styles.testiBiz}>{t.biz}</div>
-                </div>
-              </div>
-              <div style={styles.testiResult}>{t.result}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div style={styles.divider} />
-
-      {/* BOTTOM CTA */}
-      <section style={styles.ctaSection}>
-        <div style={styles.ctaBox}>
-          <h2 style={styles.ctaTitle}>
-            Stop guessing.<br />Start knowing.
-          </h2>
-          <p style={styles.ctaP}>
-            Run the free audit and get a ranked, specific plan for where AI fits
-            your ecommerce store — in the next 2 minutes.
+          <p className="heroText">
+            Get a personalized automation report that identifies where your
+            store may be losing time, margin, and revenue — then shows which
+            workflow to improve first.
           </p>
-          <div style={styles.checklist}>
-            {[
-              "AI Readiness Score (0–100)",
-              "Hours wasted weekly — calculated",
-              "Estimated monthly revenue being lost",
-              "Top 5 automations ranked by impact",
-              "Your 30-day AI implementation roadmap",
-            ].map((item) => (
-              <div key={item} style={styles.checkItem}>
-                <div style={styles.checkMark}>✓</div>
-                <span style={{ fontSize: "13px", color: "rgba(232,230,224,0.65)" }}>
-                  {item}
-                </span>
-              </div>
-            ))}
+
+          <div className="heroActions">
+            <a href="/scan" className="primaryCta">
+              Generate My Automation Report →
+            </a>
+
+            <a href="#sample" className="secondaryCta">
+              View Sample Result
+            </a>
           </div>
-          <Link href="/scan" style={{ ...styles.primaryBtn, display: "block", textAlign: "center", width: "100%" }}>
-            Run My Free AI Audit →
-          </Link>
-          <div style={{ marginTop: "12px", fontSize: "11px", color: "rgba(232,230,224,0.3)", textAlign: "center" }}>
-            For ecommerce &amp; marketing businesses · Instant results · No credit card
+
+          <p className="trustLine">
+            No payment required · No tool connection needed · No private files required
+          </p>
+        </div>
+      </section>
+
+      <section className="section">
+        <p className="sectionEyebrow">WHAT IT EVALUATES</p>
+        <h2>Built to identify practical automation opportunities.</h2>
+
+        <div className="cards six">
+          {[
+            "Workflow repetition",
+            "Manual time waste",
+            "Tool compatibility",
+            "Data readiness",
+            "Automation risk",
+            "Implementation priority",
+          ].map((item) => (
+            <div className="card" key={item}>
+              <span className="check">✓</span>
+              <h3>{item}</h3>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section alt">
+        <p className="sectionEyebrow">HOW IT WORKS</p>
+        <h2>A short diagnostic. A clearer automation path.</h2>
+
+        <div className="cards threeCards">
+          <div className="stepCard">
+            <span className="step">1</span>
+            <h3>Answer business questions</h3>
+            <p>
+              Share your store type, tools, bottlenecks, current workflows,
+              data confidence, and automation goals.
+            </p>
+          </div>
+
+          <div className="stepCard">
+            <span className="step">2</span>
+            <h3>Get priority scoring</h3>
+            <p>
+              The diagnostic evaluates readiness, opportunity, risk, effort,
+              and potential business impact.
+            </p>
+          </div>
+
+          <div className="stepCard">
+            <span className="step">3</span>
+            <h3>See what to automate first</h3>
+            <p>
+              Receive a ranked report with your best first automation,
+              recommended tools, warnings, and next steps.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer style={styles.footer}>
-        <div style={{ ...styles.logo, color: "rgba(255,255,255,0.3)", fontSize: "14px" }}>
-          Nexum<span style={{ color: "#5af7b0", opacity: 0.6 }}>.</span>
+      <section className="section" id="sample">
+        <p className="sectionEyebrow">SAMPLE OUTPUT</p>
+        <h2>Example automation report preview</h2>
+
+        <div className="resultCard">
+          <div className="resultRow">
+            <span>AI Readiness Score</span>
+            <strong>72/100</strong>
+          </div>
+
+          <div className="resultRow">
+            <span>Automation Opportunity</span>
+            <strong>High</strong>
+          </div>
+
+          <div className="resultRow">
+            <span>Best First Automation</span>
+            <strong>Email/SMS follow-up</strong>
+          </div>
+
+          <div className="resultRow">
+            <span>Recommended Tools</span>
+            <strong>Shopify · Klaviyo · Make</strong>
+          </div>
+
+          <div className="resultRow">
+            <span>Risk Level</span>
+            <strong>Low-Medium</strong>
+          </div>
+
+          <p className="note">
+            This is a sample result. Your report is generated from your own
+            diagnostic answers.
+          </p>
         </div>
-        <div style={styles.footerLinks}>
-          <Link href="/terms" style={styles.footerLink}>Terms</Link>
-          <Link href="/privacy" style={styles.footerLink}>Privacy</Link>
+      </section>
+
+      <section className="section alt">
+        <p className="sectionEyebrow">COMMON ECOMMERCE WORKFLOWS</p>
+        <h2>Where AI can usually help first</h2>
+
+        <div className="cards threeCards">
+          <div className="stepCard">
+            <span className="step">01</span>
+            <h3>Customer follow-up</h3>
+            <p>
+              Improve abandoned cart, post-purchase, win-back, and repeat
+              purchase flows with better segmentation and messaging.
+            </p>
+          </div>
+
+          <div className="stepCard">
+            <span className="step">02</span>
+            <h3>Support replies</h3>
+            <p>
+              Reduce repetitive support work by using AI to draft replies,
+              summarize issues, and organize common questions.
+            </p>
+          </div>
+
+          <div className="stepCard">
+            <span className="step">03</span>
+            <h3>Reporting and insights</h3>
+            <p>
+              Turn store, ad, email, and customer data into weekly summaries
+              with practical action items.
+            </p>
+          </div>
         </div>
+      </section>
+
+      <section className="section">
+        <p className="sectionEyebrow">SAFE TO START</p>
+        <h2>No sensitive access required for the first diagnostic.</h2>
+
+        <div className="trustGrid">
+          <div>No passwords required</div>
+          <div>No payment required</div>
+          <div>No private files required</div>
+          <div>No store connection needed</div>
+          <div>Human approval recommended</div>
+        </div>
+      </section>
+
+      <section className="roadmapOffer">
+        <div className="offerCard">
+          <p className="sectionEyebrow">NEXT STEP</p>
+
+          <h2>Want the full implementation plan?</h2>
+
+          <p>
+            The free diagnostic identifies what to automate first. The AI
+            Automation Roadmap turns that result into a practical 30-day plan
+            with workflow steps, tool recommendations, prompts, risk warnings,
+            and success metrics.
+          </p>
+
+          <div className="offerBullets">
+            <span>Workflow map</span>
+            <span>Recommended tools</span>
+            <span>AI prompts</span>
+            <span>30-day rollout plan</span>
+            <span>Risk warnings</span>
+            <span>Success metrics</span>
+          </div>
+
+          <a href="/scan" className="primaryCta">
+            Start With The Free Diagnostic →
+          </a>
+        </div>
+      </section>
+
+      <section className="finalCta">
+        <h2>Stop guessing where AI fits.</h2>
+        <p>
+          Generate a diagnostic report and find the highest-leverage workflow
+          your ecommerce business should automate first.
+        </p>
+
+        <a href="/scan" className="primaryCta">
+          Generate My Automation Report →
+        </a>
+      </section>
+
+      <footer className="footer">
+        <span>Nexum Strategy</span>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
       </footer>
 
       <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.25; }
+        html {
+          scroll-behavior: smooth;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        a { text-decoration: none; }
-      `}</style>
-    </div>
-  );
-}
 
-const styles: Record<string, React.CSSProperties> = {
-  root: {
-    fontFamily: "var(--font-dm), DM Sans, sans-serif",
-    background: "#06080f",
-    color: "#e8e6e0",
-    minHeight: "100vh",
-    lineHeight: 1.6,
-  },
-  nav: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "1.2rem 2.5rem",
-    borderBottom: "0.5px solid rgba(255,255,255,0.08)",
-  },
-  logo: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontWeight: 800,
-    fontSize: "18px",
-    letterSpacing: "-0.5px",
-    color: "#fff",
-  },
-  logoAccent: { color: "#5af7b0" },
-  navCta: {
-    background: "#5af7b0",
-    color: "#06080f",
-    border: "none",
-    padding: "8px 20px",
-    borderRadius: "40px",
-    fontFamily: "var(--font-dm), sans-serif",
-    fontWeight: 500,
-    fontSize: "13px",
-    cursor: "pointer",
-    letterSpacing: "0.2px",
-  },
-  liveBar: {
-    background: "rgba(90,247,176,0.08)",
-    borderBottom: "0.5px solid rgba(90,247,176,0.15)",
-    padding: "10px 2.5rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "10px",
-  },
-  liveDot: {
-    width: "7px",
-    height: "7px",
-    borderRadius: "50%",
-    background: "#5af7b0",
-    animation: "pulse 1.5s infinite",
-  },
-  liveText: { fontSize: "12px", color: "rgba(232,230,224,0.6)" },
-  liveCount: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "13px",
-    fontWeight: 700,
-    color: "#5af7b0",
-  },
-  hero: {
-    position: "relative",
-    padding: "5rem 2.5rem 4rem",
-    textAlign: "center",
-    overflow: "hidden",
-  },
-  heroGlow: {
-    position: "absolute",
-    top: "-80px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    width: "600px",
-    height: "600px",
-    background: "radial-gradient(ellipse, rgba(90,247,176,0.10) 0%, transparent 70%)",
-    pointerEvents: "none",
-  },
-  eyebrow: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "6px",
-    background: "rgba(90,247,176,0.1)",
-    border: "0.5px solid rgba(90,247,176,0.3)",
-    color: "#5af7b0",
-    padding: "5px 14px",
-    borderRadius: "40px",
-    fontSize: "11px",
-    fontWeight: 500,
-    letterSpacing: "1.2px",
-    textTransform: "uppercase",
-    marginBottom: "1.5rem",
-  },
-  eyebrowDot: {
-    width: "6px",
-    height: "6px",
-    borderRadius: "50%",
-    background: "#5af7b0",
-    animation: "pulse 2s infinite",
-  },
-  h1: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "clamp(36px, 6vw, 56px)",
-    fontWeight: 800,
-    lineHeight: 1.05,
-    letterSpacing: "-2px",
-    color: "#ffffff",
-    marginBottom: "1.25rem",
-    maxWidth: "680px",
-    marginLeft: "auto",
-    marginRight: "auto",
-  },
-  accent: { fontStyle: "normal", color: "#5af7b0" },
-  heroSub: {
-    fontSize: "16px",
-    color: "rgba(232,230,224,0.6)",
-    maxWidth: "480px",
-    margin: "0 auto 2.5rem",
-    fontWeight: 300,
-    lineHeight: 1.7,
-  },
-  ctaGroup: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "12px",
-  },
-  primaryBtn: {
-    background: "#5af7b0",
-    color: "#06080f",
-    border: "none",
-    padding: "14px 32px",
-    borderRadius: "40px",
-    fontFamily: "var(--font-dm), sans-serif",
-    fontWeight: 500,
-    fontSize: "15px",
-    cursor: "pointer",
-    letterSpacing: "-0.2px",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  trustLine: { fontSize: "12px", color: "rgba(232,230,224,0.35)" },
-  heroPreview: {
-    marginTop: "3.5rem",
-    background: "rgba(255,255,255,0.04)",
-    border: "0.5px solid rgba(255,255,255,0.1)",
-    borderRadius: "16px",
-    padding: "1.5rem",
-    maxWidth: "560px",
-    marginLeft: "auto",
-    marginRight: "auto",
-    textAlign: "left",
-  },
-  previewLabel: {
-    fontSize: "10px",
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-    color: "rgba(232,230,224,0.3)",
-    marginBottom: "1rem",
-  },
-  previewRow: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "10px" },
-  previewMetric: {
-    background: "rgba(255,255,255,0.05)",
-    borderRadius: "10px",
-    padding: "12px",
-    border: "0.5px solid rgba(255,255,255,0.07)",
-  },
-  metricLabel: {
-    fontSize: "10px",
-    color: "rgba(232,230,224,0.4)",
-    marginBottom: "4px",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-  },
-  metricVal: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "20px",
-    fontWeight: 700,
-  },
-  barWrap: { marginBottom: "8px" },
-  barLabelRow: { display: "flex", justifyContent: "space-between", fontSize: "11px", color: "rgba(232,230,224,0.45)", marginBottom: "5px" },
-  barLabelLeft: {},
-  barLabelRight: { fontWeight: 500 },
-  barTrack: { background: "rgba(255,255,255,0.07)", borderRadius: "4px", height: "6px", overflow: "hidden" },
-  barFill: { height: "100%", borderRadius: "4px" },
-  divider: { height: "0.5px", background: "rgba(255,255,255,0.07)", margin: "0 2.5rem" },
-  section: { padding: "4rem 2.5rem" },
-  sectionLabel: {
-    fontSize: "10px",
-    letterSpacing: "2px",
-    textTransform: "uppercase",
-    color: "rgba(232,230,224,0.3)",
-    marginBottom: "0.75rem",
-    textAlign: "center",
-  },
-  sectionTitle: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "clamp(24px, 4vw, 34px)",
-    fontWeight: 700,
-    textAlign: "center",
-    letterSpacing: "-1px",
-    color: "#fff",
-    marginBottom: "0.75rem",
-    lineHeight: 1.15,
-  },
-  sectionSub: {
-    textAlign: "center",
-    fontSize: "14px",
-    color: "rgba(232,230,224,0.45)",
-    maxWidth: "380px",
-    margin: "0 auto 3rem",
-    lineHeight: 1.6,
-  },
-  painGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "12px",
-    maxWidth: "680px",
-    margin: "0 auto",
-  },
-  painCard: {
-    background: "rgba(255,255,255,0.03)",
-    border: "0.5px solid rgba(255,255,255,0.08)",
-    borderRadius: "14px",
-    padding: "1.25rem",
-  },
-  painIcon: { fontSize: "20px", marginBottom: "8px" },
-  painTitle: { fontSize: "13px", fontWeight: 500, color: "#fff", marginBottom: "4px" },
-  painDesc: { fontSize: "12px", color: "rgba(232,230,224,0.4)", lineHeight: 1.5 },
-  stepsWrap: { maxWidth: "560px", margin: "0 auto" },
-  step: { display: "grid", gridTemplateColumns: "48px 1fr", gap: "16px", marginBottom: "2rem", alignItems: "start" },
-  stepNum: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "50%",
-    border: "0.5px solid rgba(90,247,176,0.4)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "13px",
-    fontWeight: 700,
-    color: "#5af7b0",
-    flexShrink: 0,
-    marginTop: "2px",
-  },
-  stepTitle: { fontSize: "15px", fontWeight: 500, color: "#fff", marginBottom: "4px", letterSpacing: "-0.3px" },
-  stepDesc: { fontSize: "13px", color: "rgba(232,230,224,0.45)", lineHeight: 1.55 },
-  socialProof: {
-    background: "rgba(90,247,176,0.06)",
-    borderTop: "0.5px solid rgba(90,247,176,0.15)",
-    borderBottom: "0.5px solid rgba(90,247,176,0.15)",
-    padding: "2.5rem",
-  },
-  statsRow: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr 1fr",
-    gap: "1rem",
-    maxWidth: "560px",
-    margin: "0 auto",
-  },
-  bigStat: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "clamp(32px, 5vw, 48px)",
-    fontWeight: 800,
-    color: "#5af7b0",
-    letterSpacing: "-2px",
-    display: "block",
-  },
-  bigStatLabel: { fontSize: "12px", color: "rgba(232,230,224,0.5)", marginTop: "4px" },
-  testiGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-    gap: "12px",
-    maxWidth: "900px",
-    margin: "0 auto",
-  },
-  testiCard: {
-    background: "rgba(255,255,255,0.03)",
-    border: "0.5px solid rgba(255,255,255,0.08)",
-    borderRadius: "14px",
-    padding: "1.1rem",
-  },
-  testiQuote: { fontSize: "12px", color: "rgba(232,230,224,0.6)", lineHeight: 1.6, marginBottom: "12px", fontStyle: "italic", fontWeight: 300 },
-  testiAuthor: { display: "flex", alignItems: "center", gap: "8px" },
-  testiAvatar: {
-    width: "28px",
-    height: "28px",
-    borderRadius: "50%",
-    background: "rgba(90,247,176,0.15)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "10px",
-    fontWeight: 700,
-    color: "#5af7b0",
-    flexShrink: 0,
-  },
-  testiName: { fontSize: "11px", fontWeight: 500, color: "#fff" },
-  testiBiz: { fontSize: "10px", color: "rgba(232,230,224,0.35)" },
-  testiResult: {
-    display: "inline-block",
-    background: "rgba(90,247,176,0.1)",
-    border: "0.5px solid rgba(90,247,176,0.2)",
-    color: "#5af7b0",
-    fontSize: "10px",
-    padding: "2px 8px",
-    borderRadius: "20px",
-    marginTop: "8px",
-    fontWeight: 500,
-  },
-  ctaSection: { padding: "4rem 2.5rem", textAlign: "center" },
-  ctaBox: {
-    background: "rgba(90,247,176,0.07)",
-    border: "0.5px solid rgba(90,247,176,0.2)",
-    borderRadius: "20px",
-    padding: "3rem 2rem",
-    maxWidth: "520px",
-    margin: "0 auto",
-  },
-  ctaTitle: {
-    fontFamily: "var(--font-syne), Syne, sans-serif",
-    fontSize: "28px",
-    fontWeight: 800,
-    color: "#fff",
-    letterSpacing: "-1px",
-    marginBottom: "0.75rem",
-    lineHeight: 1.15,
-  },
-  ctaP: { fontSize: "13px", color: "rgba(232,230,224,0.5)", marginBottom: "2rem", lineHeight: 1.6 },
-  checklist: { textAlign: "left", marginBottom: "2rem" },
-  checkItem: { display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" },
-  checkMark: {
-    width: "16px",
-    height: "16px",
-    borderRadius: "50%",
-    background: "rgba(90,247,176,0.2)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    fontSize: "9px",
-    color: "#5af7b0",
-  },
-  footer: {
-    padding: "1.5rem 2.5rem",
-    borderTop: "0.5px solid rgba(255,255,255,0.07)",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  footerLinks: { display: "flex", gap: "16px" },
-  footerLink: { fontSize: "11px", color: "rgba(255,255,255,0.25)", textDecoration: "none" },
-};
+        .page {
+          margin: 0;
+          background: #020b1c;
+          color: white;
+          font-family: Arial, sans-serif;
+          overflow-x: hidden;
+        }
+
+        .hero {
+          min-height: 100vh;
+          position: relative;
+          background-image:
+            linear-gradient(rgba(0, 8, 25, 0.35), rgba(0, 8, 25, 0.72)),
+            url('/background.png');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .heroOverlay {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(circle at center, rgba(14,165,255,0.16), transparent 38%),
+            radial-gradient(circle at bottom, rgba(37,99,235,0.18), transparent 32%);
+          pointer-events: none;
+        }
+
+        .nav {
+          position: relative;
+          z-index: 2;
+          max-width: 1180px;
+          width: calc(100% - 48px);
+          margin: 0 auto;
+          padding: 28px 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 18px;
+        }
+
+        .logo {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          color: white;
+          text-decoration: none;
+          font-size: 20px;
+          font-weight: 900;
+        }
+
+        .logoIcon {
+          width: 42px;
+          height: 42px;
+          display: grid;
+          place-items: center;
+          border-radius: 14px;
+          background: rgba(14,165,255,0.16);
+          color: #7dd3fc;
+          border: 1px solid rgba(125,211,252,0.25);
+          box-shadow: 0 0 24px rgba(14,165,255,0.2);
+        }
+
+        .navCta {
+          color: white;
+          text-decoration: none;
+          padding: 12px 18px;
+          border-radius: 999px;
+          background: rgba(14,165,255,0.16);
+          border: 1px solid rgba(125,211,252,0.25);
+          font-weight: 800;
+        }
+
+        .heroContent {
+          position: relative;
+          z-index: 2;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          width: min(980px, calc(100% - 40px));
+          margin: 0 auto;
+          padding: 60px 0 110px;
+        }
+
+        .eyebrow,
+        .sectionEyebrow {
+          color: #7dd3fc;
+          font-size: 13px;
+          font-weight: 900;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+        }
+
+        .eyebrow {
+          margin: 0 0 18px;
+          padding: 10px 18px;
+          border: 1px solid rgba(125,211,252,0.22);
+          border-radius: 999px;
+          background: rgba(14,165,255,0.08);
+        }
+
+        .hero h1 {
+          margin: 0;
+          font-size: clamp(46px, 7vw, 92px);
+          line-height: 0.96;
+          letter-spacing: -0.06em;
+          font-weight: 950;
+          background: linear-gradient(135deg, #ffffff, #7dd3fc, #2563eb);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .heroText {
+          max-width: 820px;
+          margin: 26px auto 0;
+          color: rgba(255,255,255,0.8);
+          font-size: clamp(18px, 2vw, 25px);
+          line-height: 1.5;
+        }
+
+        .heroActions {
+          margin-top: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+
+        .primaryCta,
+        .secondaryCta {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          padding: 17px 30px;
+          font-size: 17px;
+          font-weight: 900;
+          text-decoration: none;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .primaryCta {
+          color: white;
+          background: linear-gradient(135deg, #0ea5ff, #2563eb);
+          box-shadow: 0 0 32px rgba(14,165,255,0.45);
+        }
+
+        .secondaryCta {
+          color: white;
+          background: rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .primaryCta:hover,
+        .secondaryCta:hover {
+          transform: translateY(-2px);
+        }
+
+        .trustLine {
+          margin: 22px 0 0;
+          color: rgba(255,255,255,0.62);
+          font-size: 15px;
+        }
+
+        .section {
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 96px 24px;
+        }
+
+        .section.alt {
+          max-width: none;
+          padding-left: max(24px, calc((100vw - 1180px) / 2));
+          padding-right: max(24px, calc((100vw - 1180px) / 2));
+          background:
+            radial-gradient(circle at top right, rgba(14,165,255,0.12), transparent 35%),
+            rgba(255,255,255,0.025);
+          border-top: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .sectionEyebrow {
+          margin: 0 0 12px;
+          text-align: center;
+        }
+
+        .section h2,
+        .finalCta h2,
+        .roadmapOffer h2 {
+          margin: 0 auto 42px;
+          max-width: 900px;
+          text-align: center;
+          font-size: clamp(34px, 4vw, 58px);
+          line-height: 1.05;
+          letter-spacing: -0.04em;
+        }
+
+        .cards {
+          display: grid;
+          gap: 22px;
+        }
+
+        .six {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .threeCards {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .card,
+        .stepCard,
+        .resultCard,
+        .trustGrid div,
+        .offerCard {
+          background: rgba(255,255,255,0.045);
+          border: 1px solid rgba(125,211,252,0.18);
+          border-radius: 24px;
+          box-shadow: 0 0 36px rgba(0,0,0,0.24);
+          backdrop-filter: blur(14px);
+        }
+
+        .card {
+          padding: 26px;
+        }
+
+        .check {
+          display: grid;
+          place-items: center;
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          margin-bottom: 18px;
+          color: #7dd3fc;
+          border: 1px solid rgba(125,211,252,0.35);
+          background: rgba(14,165,255,0.08);
+          font-weight: 900;
+        }
+
+        .card h3 {
+          margin: 0;
+          font-size: 20px;
+        }
+
+        .stepCard {
+          padding: 30px;
+        }
+
+        .step {
+          display: grid;
+          place-items: center;
+          width: 48px;
+          height: 48px;
+          border-radius: 999px;
+          margin-bottom: 20px;
+          background: rgba(14,165,255,0.12);
+          border: 1px solid rgba(125,211,252,0.35);
+          color: #7dd3fc;
+          font-weight: 900;
+        }
+
+        .stepCard h3 {
+          margin: 0 0 12px;
+          font-size: 24px;
+        }
+
+        .stepCard p {
+          margin: 0;
+          color: rgba(255,255,255,0.72);
+          line-height: 1.6;
+        }
+
+        .resultCard {
+          max-width: 820px;
+          margin: 0 auto;
+          padding: 34px;
+        }
+
+        .resultRow {
+          display: flex;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 18px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          color: rgba(255,255,255,0.78);
+        }
+
+        .resultRow strong {
+          color: #7dd3fc;
+          text-align: right;
+        }
+
+        .note {
+          margin: 24px 0 0;
+          text-align: center;
+          color: rgba(255,255,255,0.58);
+          font-size: 14px;
+        }
+
+        .trustGrid {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 16px;
+        }
+
+        .trustGrid div {
+          padding: 22px;
+          text-align: center;
+          color: rgba(255,255,255,0.8);
+          font-weight: 700;
+        }
+
+        .roadmapOffer {
+          padding: 96px 24px;
+          background:
+            radial-gradient(circle at center, rgba(14,165,255,0.16), transparent 36%),
+            #020b1c;
+        }
+
+        .offerCard {
+          max-width: 940px;
+          margin: 0 auto;
+          padding: 42px;
+          text-align: center;
+        }
+
+        .offerCard p {
+          max-width: 760px;
+          margin: 0 auto 28px;
+          color: rgba(255,255,255,0.74);
+          font-size: 19px;
+          line-height: 1.6;
+        }
+
+        .offerBullets {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 14px;
+          margin: 28px 0 34px;
+        }
+
+        .offerBullets span {
+          padding: 14px;
+          border-radius: 14px;
+          background: rgba(14,165,255,0.08);
+          border: 1px solid rgba(125,211,252,0.16);
+          color: rgba(255,255,255,0.82);
+          font-weight: 700;
+        }
+
+        .finalCta {
+          padding: 100px 24px;
+          text-align: center;
+        }
+
+        .finalCta p {
+          max-width: 760px;
+          margin: -22px auto 34px;
+          color: rgba(255,255,255,0.72);
+          font-size: 21px;
+          line-height: 1.5;
+        }
+
+        .footer {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 30px;
+          padding: 26px 20px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.72);
+        }
+
+        .footer a {
+          color: rgba(255,255,255,0.82);
+          text-decoration: none;
+          font-size: 15px;
+        }
+
+        .footer a:hover {
+          color: #7dd3fc;
+        }
+
+        @media (max-width: 900px) {
+          .nav {
+            width: calc(100% - 32px);
+          }
+
+          .navCta {
+            display: none;
+          }
+
+          .hero {
+            min-height: 92vh;
+          }
+
+          .heroContent {
+            padding: 50px 0 80px;
+          }
+
+          .hero h1 {
+            font-size: clamp(42px, 12vw, 64px);
+          }
+
+          .six,
+          .threeCards,
+          .trustGrid,
+          .offerBullets {
+            grid-template-columns: 1fr;
+          }
+
+          .section {
+            padding: 72px 20px;
+          }
+
+          .resultRow {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 8px;
+          }
+
+          .resultRow strong {
+            text-align: left;
+          }
+
+          .offerCard {
+            padding: 30px 22px;
+          }
+
+          .footer {
+            flex-wrap: wrap;
+          }
+        }
+      `}</style>
+    </main>
+  )
+}
