@@ -1,420 +1,225 @@
 "use client"
 
 import { useState } from "react"
-import { useSearchParams } from "next/navigation"
-
-type AnswerValue = string | string[]
-const questions = [
-  // 1. BUSINESS TYPE (FIRST)
-  {
-    key: "business_model",
-    question: "What type of ecommerce/ marketing business do you run?",
-    multiple: false,
-    options: [
-      "Single-brand online store",
-      "Multi-brand retailer",
-      "Dropshipping store",
-      "Subscription ecommerce",
-      "Digital products",
-      "Local business selling online",
-      "Marketplace seller",
-      "Other",
-    ],
-  },
-
-  // 2. REVENUE
-  {
-    key: "monthly_revenue",
-    question: "What is your approximate monthly online revenue?",
-    multiple: false,
-    options: [
-      "$0 - $5k",
-      "$5k - $25k",
-      "$25k - $100k",
-      "$100k - $500k",
-      "$500k+",
-      "Prefer not to say",
-    ],
-  },
-
-  // 3. GOAL
-  {
-    key: "main_goal",
-    question: "What is your main growth goal right now?",
-    multiple: false,
-    options: [
-      "Get more traffic",
-      "Increase conversion rate",
-      "Improve paid ads performance",
-      "Recover abandoned carts",
-      "Increase repeat purchases",
-      "Improve email/SMS marketing",
-      "Reduce manual work",
-      "Understand customers better",
-    ],
-  },
-
-  // 4. CHANNELS
-  {
-    key: "marketing_channels",
-    question: "Which marketing channels do you currently use?",
-    multiple: true,
-    options: [
-      "Meta ads",
-      "Google ads",
-      "TikTok ads",
-      "SEO",
-      "Email marketing",
-      "SMS marketing",
-      "Influencers / UGC",
-      "Organic social media",
-      "Affiliate marketing",
-      "None yet",
-    ],
-  },
-
-  // 5. TOOLS
-  {
-    key: "tools",
-    question: "Which tools are already part of your stack?",
-    multiple: true,
-    options: [
-      "Shopify",
-      "WooCommerce",
-      "Klaviyo",
-      "Mailchimp",
-      "HubSpot",
-      "Google Analytics",
-      "Meta Pixel",
-      "TikTok Pixel",
-      "Zapier",
-      "Not sure",
-    ],
-  },
-
-  // 6. PROBLEM
-  {
-    key: "biggest_problem",
-    question: "Where is your business leaking the most money?",
-    multiple: false,
-    options: [
-      "Low website conversion",
-      "Expensive ad costs",
-      "Weak email follow-up",
-      "Poor customer retention",
-      "Slow customer support",
-      "Bad product pages",
-      "No clear data tracking",
-      "I do not know",
-    ],
-  },
-
-  // 7. AI INTEREST
-  {
-    key: "automation_interest",
-    question: "What would you most like AI to automate first?",
-    multiple: false,
-    options: [
-      "Ad copy and creative testing",
-      "Email/SMS campaigns",
-      "Customer support replies",
-      "Product descriptions",
-      "Lead generation",
-      "Customer segmentation",
-      "Sales reporting",
-      "Personalized recommendations",
-    ],
-  },
-
-  // 8. DATA
-  {
-    key: "data_quality",
-    question: "How confident are you in your current marketing data?",
-    multiple: false,
-    options: [
-      "Very confident",
-      "Somewhat confident",
-      "Not confident",
-      "We barely track anything",
-      "I am not sure",
-    ],
-  },
-
-  // 9. URGENCY
-  {
-    key: "urgency",
-    question: "How soon do you want to improve this?",
-    multiple: false,
-    options: [
-      "Immediately",
-      "Within 30 days",
-      "Within 90 days",
-      "This year",
-      "Just exploring",
-    ],
-  },
-]
+import { useRouter } from "next/navigation"
 
 export default function ScanPage() {
-  const params = useSearchParams()
-  const industry = params.get("industry") || "E-Commerce"
-  params.get("industry") ||
-  
-  "Ecommerce / Marketing"
+  const router = useRouter()
 
-  const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({})
+  const [email, setEmail] = useState("")
+  const [businessType, setBusinessType] = useState("E-Commerce")
+  const [operations, setOperations] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const current = questions[step]
-  const currentAnswer = answers[current.key]
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
 
-  function isSelected(option: string) {
-    if (current.multiple) {
-      return Array.isArray(currentAnswer) && currentAnswer.includes(option)
-    }
-
-    return currentAnswer === option
-  }
-
-  function hasAnswer() {
-    if (!currentAnswer) return false
-    if (Array.isArray(currentAnswer)) return currentAnswer.length > 0
-    return Boolean(currentAnswer)
-  }
-
-  function selectAnswer(option: string) {
-    if (current.multiple) {
-      const previous = Array.isArray(currentAnswer) ? currentAnswer : []
-
-      setAnswers({
-        ...answers,
-        [current.key]: previous.includes(option)
-          ? previous.filter((item) => item !== option)
-          : [...previous, option],
+    try {
+      const res = await fetch("/api/audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          businessType,
+          operations,
+        }),
       })
 
-      return
-    }
+      const data = await res.json()
 
-    setAnswers({
-      ...answers,
-      [current.key]: option,
-    })
-  }
-
-  function buildResultsQuery() {
-    const query = new URLSearchParams()
-    query.set("industry", industry)
-
-    Object.entries(answers).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        query.set(key, value.join(","))
-      } else {
-        query.set(key, value)
+      if (!res.ok) {
+        console.error("Audit API failed:", data)
+        throw new Error(data?.error || "Audit failed")
       }
-    })
 
-    return query.toString()
-  }
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("auditResult", JSON.stringify(data))
+      }
 
-  function nextQuestion() {
-    if (!hasAnswer()) {
-      alert("Please select at least one answer first.")
-      return
+      router.push("/results")
+    } catch (err) {
+      console.error("Submit error:", err)
+      setError("Failed to perform audit. Please try again.")
+    } finally {
+      setLoading(false)
     }
-
-    if (step === questions.length - 1) {
-      window.location.href = `/results?${buildResultsQuery()}`
-      return
-    }
-
-    setStep(step + 1)
-  }
-
-  function backQuestion() {
-    if (step === 0) {
-      window.location.href = "/"
-      return
-    }
-
-    setStep(step - 1)
   }
 
   return (
-    <main style={styles.main}>
-      <div style={styles.container}>
-        <div style={styles.topBar}>
-          <h1 style={styles.logo}>AI Business Audit</h1>
-          <span style={styles.industry}>{industry}</span>
-        </div>
+    <main className="page">
+      <section className="card">
+        <div className="icon">✦</div>
 
-        <p style={styles.progress}>
-         Question {step + 2} of {questions.length + 1}
-        </p>
+        <h1>AI Compatibility Audit</h1>
+        <p className="subtitle">Tell us about your business to get started</p>
 
-        <div style={styles.progressTrack}>
-          <div
-            style={{
-              ...styles.progressFill,
-              width: `${((step + 1) / questions.length) * 100}%`,
-            }}
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="form">
+          <label>
+            Email Address
+            <input
+              type="email"
+              value={email}
+              placeholder="you@company.com"
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
 
-        <section style={styles.card}>
-          <p style={styles.label}>
-            {current.multiple ? "Select all that apply" : "Select one answer"}
-          </p>
-
-          <h2 style={styles.question}>{current.question}</h2>
-
-          <div style={styles.grid}>
-            {current.options.map((option) => (
-              <button
-                key={option}
-                onClick={() => selectAnswer(option)}
-                style={{
-                  ...styles.option,
-                  ...(isSelected(option) ? styles.selectedOption : {}),
-                }}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-
-          <div style={styles.actions}>
-            <button style={styles.backButton} onClick={backQuestion}>
-              ← Back
-            </button>
-
-            <button
-              style={{
-                ...styles.nextButton,
-                opacity: hasAnswer() ? 1 : 0.5,
-              }}
-              onClick={nextQuestion}
+          <label>
+            Business Type
+            <select
+              value={businessType}
+              onChange={(e) => setBusinessType(e.target.value)}
             >
-              {step === questions.length - 1
-                ? "Generate Audit →"
-                : "Next Question →"}
-            </button>
-          </div>
-        </section>
-      </div>
+              <option>E-Commerce</option>
+              <option>Marketing Agency</option>
+              <option>SaaS / Software</option>
+              <option>Local Service Business</option>
+              <option>Consulting / Professional Services</option>
+              <option>Other</option>
+            </select>
+          </label>
+
+          <label>
+            Describe Your Business Operations
+            <textarea
+              value={operations}
+              placeholder="Example: We run ads, send email campaigns, create reports, handle support, and follow up with leads manually."
+              onChange={(e) => setOperations(e.target.value)}
+              required
+            />
+          </label>
+
+          {error && <p className="error">{error}</p>}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Generating Audit..." : "Generate My AI Audit →"}
+          </button>
+        </form>
+      </section>
+
+      <style>{`
+        .page {
+          min-height: 100vh;
+          background:
+            radial-gradient(circle at top right, rgba(14,165,255,0.2), transparent 35%),
+            radial-gradient(circle at bottom left, rgba(37,99,235,0.18), transparent 35%),
+            linear-gradient(180deg, #061528, #020b1c);
+          color: white;
+          font-family: Arial, sans-serif;
+          padding: 40px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .card {
+          width: min(720px, 100%);
+          background: rgba(7, 20, 42, 0.9);
+          border: 1px solid rgba(125,211,252,0.2);
+          border-radius: 28px;
+          padding: 40px;
+          box-shadow: 0 0 60px rgba(0,0,0,0.45);
+        }
+
+        .icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 16px;
+          background: rgba(14,165,255,0.14);
+          border: 1px solid rgba(125,211,252,0.25);
+          display: grid;
+          place-items: center;
+          color: #38bdf8;
+          font-size: 30px;
+          margin-bottom: 20px;
+        }
+
+        h1 {
+          margin: 0;
+          font-size: clamp(34px, 5vw, 52px);
+          line-height: 1;
+          background: linear-gradient(135deg, #fff, #7dd3fc, #0ea5ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+          margin: 14px 0 34px;
+          color: rgba(255,255,255,0.7);
+          font-size: 18px;
+        }
+
+        .form {
+          display: grid;
+          gap: 24px;
+        }
+
+        label {
+          display: grid;
+          gap: 10px;
+          font-weight: 800;
+          color: white;
+        }
+
+        input,
+        select,
+        textarea {
+          width: 100%;
+          box-sizing: border-box;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.045);
+          color: white;
+          border-radius: 14px;
+          padding: 16px 18px;
+          font-size: 16px;
+          outline: none;
+        }
+
+        textarea {
+          min-height: 140px;
+          resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+          border-color: rgba(56,189,248,0.75);
+          box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
+        }
+
+        option {
+          color: black;
+        }
+
+        .error {
+          color: #f87171;
+          font-weight: 800;
+          margin: 0;
+        }
+
+        button {
+          border: none;
+          border-radius: 999px;
+          padding: 18px 28px;
+          background: linear-gradient(135deg, #0ea5ff, #2563eb);
+          color: white;
+          font-size: 18px;
+          font-weight: 900;
+          cursor: pointer;
+          box-shadow: 0 0 32px rgba(14,165,255,0.42);
+        }
+
+        button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      `}</style>
     </main>
   )
-}
-
-const styles = {
-  main: {
-    minHeight: "100vh",
-    background:
-      "radial-gradient(circle at top, rgba(0,140,255,0.18), transparent 45%), linear-gradient(180deg, #061528, #020b1c)",
-    color: "white",
-    padding: "70px 20px",
-    fontFamily: "Arial, sans-serif",
-  },
-  container: {
-    maxWidth: "950px",
-    margin: "0 auto",
-  },
-  topBar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "40px",
-  },
-  logo: {
-    fontSize: "22px",
-    margin: 0,
-  },
-  industry: {
-    color: "rgba(255,255,255,0.65)",
-    fontSize: "14px",
-  },
-  progress: {
-    textAlign: "center" as const,
-    color: "rgba(255,255,255,0.65)",
-    marginBottom: "14px",
-  },
-  progressTrack: {
-    width: "100%",
-    height: "8px",
-    background: "rgba(255,255,255,0.1)",
-    borderRadius: "999px",
-    overflow: "hidden",
-    marginBottom: "34px",
-  },
-  progressFill: {
-    height: "100%",
-    background: "linear-gradient(135deg, #0ea5ff, #2563eb)",
-    transition: "width 0.3s ease",
-  },
-  card: {
-    background: "rgba(7, 20, 42, 0.85)",
-    border: "1px solid rgba(255,255,255,0.14)",
-    borderRadius: "18px",
-    padding: "36px",
-    boxShadow: "0 0 45px rgba(0,0,0,0.35)",
-  },
-  label: {
-    color: "#0ea5ff",
-    fontSize: "14px",
-    fontWeight: "700",
-    marginBottom: "10px",
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.08em",
-  },
-  question: {
-    fontSize: "32px",
-    marginBottom: "30px",
-    lineHeight: "1.2",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: "18px",
-  },
-  option: {
-    padding: "22px",
-    borderRadius: "14px",
-    border: "1px solid rgba(255,255,255,0.18)",
-    background: "rgba(255,255,255,0.04)",
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-    textAlign: "left" as const,
-  },
-  selectedOption: {
-    border: "2px solid #0ea5ff",
-    background: "rgba(14,165,255,0.16)",
-  },
-  actions: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginTop: "34px",
-    gap: "16px",
-  },
-  backButton: {
-    padding: "16px 26px",
-    borderRadius: "10px",
-    border: "1px solid rgba(255,255,255,0.2)",
-    background: "transparent",
-    color: "white",
-    fontSize: "16px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-  nextButton: {
-    padding: "16px 34px",
-    border: "none",
-    borderRadius: "10px",
-    background: "linear-gradient(135deg, #0ea5ff, #2563eb)",
-    color: "white",
-    fontSize: "18px",
-    fontWeight: "800",
-    cursor: "pointer",
-  },
 }
