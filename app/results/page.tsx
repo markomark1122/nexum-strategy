@@ -1,878 +1,460 @@
 "use client"
 
-import { Suspense, useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
-
-type AuditOpportunity = {
-  title: string
-  description: string
-  impact: string
-  difficulty?: string
-}
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 
 type AuditResult = {
   score: number
+  opportunityScore: number
   summary: string
   problems: string[]
-  opportunities: AuditOpportunity[]
+  opportunities: {
+    title: string
+    description: string
+    impact: string
+    difficulty: string
+  }[]
   estimatedImpact: {
     timeSaved: string
     revenueUpside: string
   }
   nextStep: string
-  opportunityScore?: number
-  maturityStage?: string
-  riskLevel?: string
-  bestFirstAutomation?: string
-  roadmap?: {
+  maturityStage: string
+  riskLevel: string
+  bestFirstAutomation: string
+  roadmap: {
     week: string
     task: string
   }[]
 }
 
-export default function ResultsPage() {
-  return (
-    <Suspense fallback={<Loading />}>
-      <ResultsContent />
-    </Suspense>
-  )
+type AuditAnswers = {
+  email?: string
+  businessType?: string
+  monthlyRevenue?: string
+  teamSize?: string
+  tools?: string[]
+  marketingChannels?: string[]
+  biggestBottleneck?: string
+  weeklyManualWork?: string
+  automationPriority?: string
+  approvalLevel?: string
+  urgency?: string
 }
 
-function ResultsContent() {
-  const params = useSearchParams()
-  const [audit, setAudit] = useState<AuditResult | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const data = useMemo(
-    () => ({
-      industry: params.get("industry") || "Ecommerce / Marketing",
-
-      // Your newer questionnaire keys
-      business_model: params.get("business_model") || "",
-      monthly_revenue: params.get("monthly_revenue") || "",
-      main_goal: params.get("main_goal") || "",
-      marketing_channels: params.get("marketing_channels") || "",
-      tools: params.get("tools") || "",
-      biggest_problem: params.get("biggest_problem") || "",
-      automation_interest: params.get("automation_interest") || "",
-      data_quality: params.get("data_quality") || "",
-      manual_work: params.get("manual_work") || "",
-      team_size: params.get("team_size") || "",
-      urgency: params.get("urgency") || "",
-
-      // Fallback support for your older keys
-      revenue: params.get("revenue") || params.get("monthly_revenue") || "",
-      team: params.get("team") || params.get("team_size") || "",
-      bottleneck: params.get("bottleneck") || params.get("biggest_problem") || "",
-      errors: params.get("errors") || "",
-      goal: params.get("goal") || params.get("main_goal") || "",
-    }),
-    [params]
-  )
+export default function ResultsPage() {
+  const [result, setResult] = useState<AuditResult | null>(null)
+  const [answers, setAnswers] = useState<AuditAnswers | null>(null)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
-    async function fetchAudit() {
-      try {
-        const res = await fetch("/api/audit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        })
+    const storedResult = window.sessionStorage.getItem("auditResult")
+    const storedAnswers = window.sessionStorage.getItem("auditAnswers")
 
-        const json = await res.json()
+    if (storedResult) setResult(JSON.parse(storedResult))
+    if (storedAnswers) setAnswers(JSON.parse(storedAnswers))
 
-        const localResult = generateLocalAuditResult(data)
+    setLoaded(true)
+  }, [])
 
-        setAudit({
-          score: Number(json.score) || localResult.score,
-          summary: json.summary || localResult.summary,
-          problems: Array.isArray(json.problems) && json.problems.length > 0
-            ? json.problems
-            : localResult.problems,
-          opportunities:
-            Array.isArray(json.opportunities) && json.opportunities.length > 0
-              ? json.opportunities
-              : localResult.opportunities,
-          estimatedImpact: json.estimatedImpact || localResult.estimatedImpact,
-          nextStep: json.nextStep || localResult.nextStep,
-          opportunityScore: Number(json.opportunityScore) || localResult.opportunityScore,
-          maturityStage: json.maturityStage || localResult.maturityStage,
-          riskLevel: json.riskLevel || localResult.riskLevel,
-          bestFirstAutomation:
-            json.bestFirstAutomation || localResult.bestFirstAutomation,
-          roadmap:
-            Array.isArray(json.roadmap) && json.roadmap.length > 0
-              ? json.roadmap
-              : localResult.roadmap,
-        })
-      } catch (error) {
-        console.error("Audit fetch failed:", error)
-        setAudit(generateLocalAuditResult(data))
-      } finally {
-        setLoading(false)
-      }
+  const generatedOn = useMemo(() => {
+    return new Date().toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }, [])
+
+  const recommendedTools = useMemo(() => {
+    if (!result) return []
+
+    const automation = result.bestFirstAutomation.toLowerCase()
+    const selectedTools = answers?.tools || []
+
+    const tools = [
+      {
+        name: "Shopify",
+        category: "Core commerce platform",
+        reason:
+          "Used as the central system of record for orders, products, and customer activity.",
+      },
+    ]
+
+    if (
+      automation.includes("email") ||
+      automation.includes("follow-up") ||
+      automation.includes("customer")
+    ) {
+      tools.push({
+        name: "Klaviyo",
+        category: "Retention and lifecycle automation",
+        reason:
+          "Well suited for email and SMS workflows such as abandoned cart, post-purchase follow-up, win-back, and segmentation.",
+      })
     }
 
-    fetchAudit()
-  }, [data])
+    if (automation.includes("support")) {
+      tools.push({
+        name: "Gorgias",
+        category: "Support operations",
+        reason:
+          "Useful for support triage, templated responses, ticket handling, and ecommerce-specific customer service workflows.",
+      })
+    }
 
-  if (loading) {
-    return <Loading />
+    if (
+      automation.includes("report") ||
+      automation.includes("workflow") ||
+      automation.includes("content") ||
+      automation.includes("campaign") ||
+      automation.includes("creative")
+    ) {
+      tools.push({
+        name: "Make",
+        category: "Workflow orchestration",
+        reason:
+          "Strong fit for connecting apps, automating recurring processes, and moving information across systems.",
+      })
+    }
+
+    if (selectedTools.includes("Zapier")) {
+      tools.push({
+        name: "Zapier",
+        category: "Light automation layer",
+        reason:
+          "Helpful when the workflow is relatively simple and speed of setup matters more than customization depth.",
+      })
+    }
+
+    const unique = new Map<string, (typeof tools)[number]>()
+    tools.forEach((tool) => unique.set(tool.name, tool))
+    return Array.from(unique.values())
+  }, [result, answers])
+
+  const findings = useMemo(() => {
+    if (!result || !answers) return []
+
+    return [
+      {
+        label: "Primary bottleneck",
+        value: answers.biggestBottleneck || "Not specified",
+      },
+      {
+        label: "Estimated manual effort",
+        value: answers.weeklyManualWork || result.estimatedImpact.timeSaved,
+      },
+      {
+        label: "Preferred outcome",
+        value: answers.automationPriority || "Operational improvement",
+      },
+      {
+        label: "Urgency",
+        value: answers.urgency || "Not specified",
+      },
+    ]
+  }, [result, answers])
+
+  if (!loaded) {
+    return (
+      <main className="ns-page ns-report-page">
+        <Background />
+        <div className="ns-report-empty">Loading report...</div>
+      </main>
+    )
   }
 
-  if (!audit) {
+  if (!result) {
     return (
-      <main className="page">
-        <section className="card">
-          <p className="badge">NEXUM STRATEGY</p>
-          <h1>Something went wrong.</h1>
-          <p className="muted">Please go back and try the audit again.</p>
-          <a href="/audit" className="cta">
-            Restart Audit →
-          </a>
-        </section>
-
-        <PageStyles />
+      <main className="ns-page ns-report-page">
+        <Background />
+        <div className="ns-report-empty">
+          <p className="ns-report-eyebrow">No report available</p>
+          <h1>No report was found in this browser session.</h1>
+          <p>
+            This usually means the diagnostic was not completed or the page was
+            opened directly.
+          </p>
+          <div className="ns-report-empty-actions">
+            <Link href="/scan" className="ns-report-primary-button">
+              Start New Diagnostic →
+            </Link>
+            <Link href="/" className="ns-report-secondary-button">
+              Back Home
+            </Link>
+          </div>
+        </div>
       </main>
     )
   }
 
   return (
-    <main className="page">
-      <section className="hero">
-        <p className="badge">AI BUSINESS AUDIT COMPLETE</p>
+    <main className="ns-page ns-report-page">
+      <Background />
 
-        <h1>Your AI Compatibility Report</h1>
+      <section className="ns-report-shell">
+        <div className="ns-report-topbar">
+          <Link href="/" className="ns-report-brand">
+            Nexum Strategy
+          </Link>
 
-        <p className="subtitle">
-          Based on your answers, here is where AI can most likely save time,
-          reduce manual work, and improve your business operations.
-        </p>
-
-        <div className="scoreGrid">
-          <ScoreCard title="AI Readiness Score" value={`${audit.score}/100`} />
-          <ScoreCard
-            title="Automation Opportunity"
-            value={`${audit.opportunityScore || 72}/100`}
-          />
-          <ScoreCard
-            title="Estimated Time Saved"
-            value={audit.estimatedImpact.timeSaved}
-          />
-          <ScoreCard
-            title="Estimated Monthly Upside"
-            value={audit.estimatedImpact.revenueUpside}
-          />
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="summaryCard">
-          <div>
-            <p className="label">Maturity Stage</p>
-            <h2>{audit.maturityStage || "AI-Ready Foundation"}</h2>
-          </div>
-
-          <div>
-            <p className="label">Risk Level</p>
-            <h2>{audit.riskLevel || "Low-Medium"}</h2>
-          </div>
-
-          <div>
-            <p className="label">Best First Automation</p>
-            <h2>{audit.bestFirstAutomation || audit.nextStep}</h2>
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="mainCard">
-          <p className="badge">SUMMARY</p>
-          <h2>What this means</h2>
-          <p className="largeMuted">{audit.summary}</p>
-        </div>
-      </section>
-
-      <section className="section">
-        <p className="badge center">KEY PROBLEMS</p>
-        <h2 className="sectionTitle">What is holding you back</h2>
-
-        <div className="problemGrid">
-          {audit.problems.map((problem, index) => (
-            <div key={index} className="smallCard">
-              <strong>Problem {index + 1}</strong>
-              <p>{problem}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section alt">
-        <p className="badge center">TOP OPPORTUNITIES</p>
-        <h2 className="sectionTitle">Recommended AI Automations</h2>
-
-        <div className="automationGrid">
-          {audit.opportunities.map((op, index) => (
-            <div key={`${op.title}-${index}`} className="automationCard">
-              <span className="rank">#{index + 1}</span>
-
-              <h3>{op.title}</h3>
-
-              <p className="muted">{op.description}</p>
-
-              <div className="miniGrid">
-                <div>
-                  <span>Impact</span>
-                  <strong>{op.impact}</strong>
-                </div>
-
-                <div>
-                  <span>Difficulty</span>
-                  <strong>{op.difficulty || "Medium"}</strong>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <p className="badge center">IMPLEMENTATION</p>
-        <h2 className="sectionTitle">30-Day AI Roadmap</h2>
-
-        <div className="roadmap">
-          {(audit.roadmap || []).map((item) => (
-            <div className="roadmapItem" key={item.week}>
-              <span>{item.week}</span>
-              <p>{item.task}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="nextStep">
-          <p className="badge">RECOMMENDED NEXT STEP</p>
-          <h2>{audit.nextStep}</h2>
-          <p>
-            Start with one workflow first. Do not try to automate the whole
-            business at once. Pick the highest-value manual process, build a
-            simple AI-assisted version, test it, then expand.
-          </p>
-
-          <div className="actionRow">
-            <a href="/audit" className="cta">
-              Run Another Audit →
-            </a>
-
+          <div className="ns-report-topbar-actions">
+            <Link href="/scan" className="ns-report-secondary-button">
+              New Diagnostic
+            </Link>
             <button
-              className="secondaryCta"
+              type="button"
               onClick={() => window.print()}
+              className="ns-report-secondary-button ns-report-print-button"
             >
-              Print / Save Report
+              Print / Save PDF
             </button>
           </div>
         </div>
+
+        <section className="ns-report-hero-card">
+          <div className="ns-report-hero-meta">
+            <div>
+              <p className="ns-report-eyebrow">Automation Diagnostic Report</p>
+              <h1>Ecommerce automation assessment</h1>
+            </div>
+
+            <div className="ns-report-meta-box">
+              <div>
+                <span>Generated</span>
+                <strong>{generatedOn}</strong>
+              </div>
+              <div>
+                <span>Prepared for</span>
+                <strong>{answers?.email || "Submitted account"}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="ns-report-summary-block">
+            <div>
+              <h2>Executive summary</h2>
+              <p>{result.summary}</p>
+            </div>
+
+            <div className="ns-report-highlight-box">
+              <span>Primary recommendation</span>
+              <strong>{result.bestFirstAutomation}</strong>
+              <p>
+                Based on your inputs, this appears to be the most practical
+                first automation to implement.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="ns-report-section">
+          <div className="ns-report-section-heading">
+            <p className="ns-report-eyebrow">Assessment snapshot</p>
+            <h2>Performance indicators</h2>
+          </div>
+
+          <div className="ns-report-metric-grid">
+            <MetricCard label="AI readiness score" value={`${result.score}/100`} />
+            <MetricCard
+              label="Automation opportunity score"
+              value={`${result.opportunityScore}/100`}
+            />
+            <MetricCard
+              label="Estimated time saved"
+              value={result.estimatedImpact.timeSaved}
+            />
+            <MetricCard
+              label="Estimated monthly upside"
+              value={result.estimatedImpact.revenueUpside}
+            />
+          </div>
+
+          <div className="ns-report-pill-grid">
+            <PillCard label="Maturity stage" value={result.maturityStage} />
+            <PillCard label="Risk level" value={result.riskLevel} />
+            <PillCard
+              label="Best first automation"
+              value={result.bestFirstAutomation}
+            />
+          </div>
+        </section>
+
+        <section className="ns-report-section ns-report-two-column">
+          <ReportPanel title="Business context">
+            <div className="ns-report-detail-grid">
+              <DetailRow label="Business type" value={answers?.businessType || "Not specified"} />
+              <DetailRow label="Monthly revenue" value={answers?.monthlyRevenue || "Not specified"} />
+              <DetailRow label="Team size" value={answers?.teamSize || "Not specified"} />
+              <DetailRow label="Marketing channels" value={(answers?.marketingChannels || []).join(", ") || "Not specified"} />
+              <DetailRow label="Current tools" value={(answers?.tools || []).join(", ") || "Not specified"} />
+              <DetailRow label="Approval preference" value={answers?.approvalLevel || "Not specified"} />
+            </div>
+          </ReportPanel>
+
+          <ReportPanel title="Key findings">
+            <div className="ns-report-stack">
+              {findings.map((item) => (
+                <div key={item.label} className="ns-report-finding-card">
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
+          </ReportPanel>
+        </section>
+
+        <section className="ns-report-section ns-report-two-column">
+          <ReportPanel title="Observed issues">
+            <div className="ns-report-stack">
+              {result.problems.map((problem) => (
+                <div key={problem} className="ns-report-list-card">
+                  {problem}
+                </div>
+              ))}
+            </div>
+          </ReportPanel>
+
+          <ReportPanel title="Recommended automation opportunities">
+            <div className="ns-report-stack">
+              {result.opportunities.map((opportunity) => (
+                <div key={opportunity.title} className="ns-report-list-card">
+                  <h3>{opportunity.title}</h3>
+                  <p>{opportunity.description}</p>
+                  <div className="ns-report-tag-row">
+                    <span>Impact: {opportunity.impact}</span>
+                    <span>Difficulty: {opportunity.difficulty}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ReportPanel>
+        </section>
+
+        <section className="ns-report-section">
+          <ReportPanel title="Recommended implementation plan">
+            <div className="ns-report-roadmap-grid">
+              {result.roadmap.map((item) => (
+                <div key={item.week} className="ns-report-roadmap-card">
+                  <span>{item.week}</span>
+                  <strong>{item.task}</strong>
+                </div>
+              ))}
+            </div>
+          </ReportPanel>
+        </section>
+
+        <section className="ns-report-section ns-report-two-column">
+          <ReportPanel title="Recommended tool stack">
+            <div className="ns-report-stack">
+              {recommendedTools.map((tool) => (
+                <div key={tool.name} className="ns-report-list-card">
+                  <h3>{tool.name}</h3>
+                  <span className="ns-report-inline-label">{tool.category}</span>
+                  <p>{tool.reason}</p>
+                </div>
+              ))}
+            </div>
+          </ReportPanel>
+
+          <ReportPanel title="Next recommended action">
+            <div className="ns-report-next-step">
+              <p>{result.nextStep}</p>
+
+              <div className="ns-report-note-box">
+                <span>Professional note</span>
+                <p>
+                  The strongest first move is usually the one that reduces
+                  repetitive workload quickly, is low-risk to implement, and can
+                  be tested without disrupting the wider operation.
+                </p>
+              </div>
+            </div>
+          </ReportPanel>
+        </section>
+
+        <section className="ns-report-offer-card">
+          <p className="ns-report-eyebrow">Optional next step</p>
+          <h2>Turn this assessment into a full implementation roadmap.</h2>
+          <p>
+            If you want, the next stage can convert this diagnostic into a more
+            formal execution plan with tool recommendations, workflow mapping,
+            rollout steps, prompt suggestions, and success metrics.
+          </p>
+
+          <div className="ns-report-offer-grid">
+            <div>Workflow mapping</div>
+            <div>Tool recommendations</div>
+            <div>Automation prompts</div>
+            <div>30-day rollout plan</div>
+            <div>Risk controls</div>
+            <div>Success metrics</div>
+          </div>
+
+          <a
+           href="https://buy.stripe.com/test_9B66oJb4S7Aq8mNaaefw400"
+           target="_blank"
+           rel="noopener noreferrer"
+           className="ns-report-primary-button"
+          >
+            Get My AI Automation Roadmap — $49 →
+          </a>
+        </section>
       </section>
-
-      <p className="disclaimer">
-        This audit provides informational insights only and does not constitute
-        professional, financial, legal, or technical advice.
-      </p>
-
-      <PageStyles />
     </main>
   )
 }
 
-function ScoreCard({ title, value }: { title: string; value: string }) {
+function Background() {
   return (
-    <div className="scoreCard">
-      <p>{title}</p>
-      <h2>{value}</h2>
+    <div className="ns-background">
+      <div className="ns-background-image" />
+      <div className="ns-background-overlay" />
+      <div className="ns-glow ns-glow-one" />
+      <div className="ns-glow ns-glow-two" />
     </div>
   )
 }
 
-function Loading() {
+function MetricCard({ label, value }: { label: string; value: string }) {
   return (
-    <main className="page">
-      <section className="card">
-        <p className="badge">NEXUM STRATEGY</p>
-        <h1>Generating your AI audit...</h1>
-        <p className="muted">Analyzing your business answers.</p>
-      </section>
-
-      <PageStyles />
-    </main>
+    <div className="ns-report-metric-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   )
 }
 
-function generateLocalAuditResult(data: Record<string, string>): AuditResult {
-  let score = 58
-  let opportunityScore = 72
-
-  const tools = data.tools || ""
-  const manualWork = data.manual_work || ""
-  const dataQuality = data.data_quality || ""
-  const biggestProblem = data.biggest_problem || data.bottleneck || ""
-  const revenue = data.monthly_revenue || data.revenue || ""
-  const urgency = data.urgency || ""
-
-  if (tools.includes("Shopify")) score += 6
-  if (tools.includes("Klaviyo")) score += 5
-  if (tools.includes("HubSpot")) score += 5
-  if (tools.includes("Google Analytics")) score += 5
-  if (tools.includes("Zapier") || tools.includes("Make")) score += 8
-
-  if (manualWork.includes("25 - 50") || manualWork.includes("50+")) {
-    opportunityScore += 15
-  }
-
-  if (dataQuality === "Very confident") score += 10
-  if (dataQuality === "Somewhat confident") score += 5
-
-  if (
-    dataQuality === "We barely track anything" ||
-    dataQuality === "Not confident"
-  ) {
-    score -= 10
-    opportunityScore += 6
-  }
-
-  if (urgency === "Immediately") opportunityScore += 8
-  if (biggestProblem === "No clear data tracking") score -= 8
-  if (biggestProblem === "Manual reporting") opportunityScore += 10
-
-  score = Math.max(20, Math.min(95, score))
-  opportunityScore = Math.max(35, Math.min(98, opportunityScore))
-
-  const bestFirstAutomation = chooseBestAutomation(data)
-
-  return {
-    score,
-    opportunityScore,
-    summary: `Your business has a strong opportunity to use AI around ${bestFirstAutomation.toLowerCase()}. The biggest value will come from reducing manual work, improving consistency, and turning scattered business activity into repeatable workflows.`,
-    problems: buildProblems(data),
-    opportunities: buildOpportunities(data, bestFirstAutomation),
-    estimatedImpact: {
-      timeSaved: estimateTimeSaved(manualWork),
-      revenueUpside: estimateRevenueUpside(revenue, manualWork),
-    },
-    maturityStage: getMaturityStage(score, opportunityScore),
-    riskLevel: getRiskLevel(data),
-    bestFirstAutomation,
-    nextStep: `Start with ${bestFirstAutomation}.`,
-    roadmap: [
-      {
-        week: "Week 1",
-        task: "Map the current workflow, document each manual step, and identify where time is being wasted.",
-      },
-      {
-        week: "Week 2",
-        task: `Build a simple AI-assisted version of ${bestFirstAutomation}. Keep human approval before anything is sent to customers or clients.`,
-      },
-      {
-        week: "Week 3",
-        task: "Test the workflow with real business examples, compare output quality, and refine the prompts or automation rules.",
-      },
-      {
-        week: "Week 4",
-        task: "Roll it out, measure time saved, document the process, and choose the next automation opportunity.",
-      },
-    ],
-  }
-}
-
-function buildProblems(data: Record<string, string>) {
-  const problems = []
-
-  if (data.biggest_problem) {
-    problems.push(`Primary bottleneck detected: ${data.biggest_problem}.`)
-  }
-
-  if (
-    data.data_quality === "Not confident" ||
-    data.data_quality === "We barely track anything"
-  ) {
-    problems.push(
-      "Your data quality may limit how accurate AI recommendations and automations can be."
-    )
-  }
-
-  if (data.manual_work) {
-    problems.push(
-      `Manual work level reported: ${data.manual_work}. This creates a strong opportunity for workflow automation.`
-    )
-  }
-
-  if (data.tools?.includes("Not sure")) {
-    problems.push(
-      "Your current tool stack is unclear, which can make automation planning harder."
-    )
-  }
-
-  if (problems.length === 0) {
-    problems.push(
-      "Your business likely has repeated workflows that can be improved with AI, but the biggest bottleneck needs more detail."
-    )
-  }
-
-  return problems.slice(0, 4)
-}
-
-function buildOpportunities(
-  data: Record<string, string>,
-  bestFirstAutomation: string
-): AuditOpportunity[] {
-  return [
-    {
-      title: bestFirstAutomation,
-      description:
-        "This is the best first workflow to improve because it matches your reported bottleneck, goal, or AI automation interest.",
-      impact: "High",
-      difficulty: "Medium",
-    },
-    {
-      title: "Reporting and insight summaries",
-      description:
-        "Use AI to summarize marketing, sales, customer, or operational data into clear weekly action reports.",
-      impact: "High",
-      difficulty: "Low-Medium",
-    },
-    {
-      title: "Email/SMS follow-up automation",
-      description:
-        "Use AI to create segmented follow-ups for leads, abandoned carts, previous customers, or inactive clients.",
-      impact: "High",
-      difficulty: "Medium",
-    },
-    {
-      title: "Content and ad creative testing",
-      description:
-        "Use AI to generate hooks, ad copy, creative angles, product descriptions, and test variations faster.",
-      impact: "Medium-High",
-      difficulty: "Low",
-    },
-    {
-      title: "Customer support assistant",
-      description:
-        "Use AI to draft replies, summarize common issues, organize FAQs, and reduce repetitive support work.",
-      impact: "Medium",
-      difficulty: "Medium",
-    },
-  ]
-}
-
-function chooseBestAutomation(data: Record<string, string>) {
-  const problem = data.biggest_problem || data.bottleneck || ""
-  const interest = data.automation_interest || ""
-
-  if (problem === "Manual reporting") return "Reporting automation"
-  if (interest === "Client reporting") return "Client reporting"
-  if (interest === "Sales reporting") return "Sales reporting"
-  if (problem === "Weak email follow-up") return "Email/SMS follow-up automation"
-  if (problem === "Slow customer support") return "AI customer support assistant"
-  if (problem === "Expensive ad costs") return "Ad creative testing workflow"
-  if (problem === "Bad product pages") return "Product page optimization"
-  if (data.main_goal === "Reduce manual work") return "Workflow automation"
-
-  return "Customer follow-up automation"
-}
-
-function estimateTimeSaved(manualWork: string) {
-  if (manualWork.includes("Less than 5")) return "2–5 hrs/week"
-  if (manualWork.includes("5 - 10")) return "5–10 hrs/week"
-  if (manualWork.includes("10 - 25")) return "10–25 hrs/week"
-  if (manualWork.includes("25 - 50")) return "25–50 hrs/week"
-  if (manualWork.includes("50+")) return "50+ hrs/week"
-
-  return "10–25 hrs/week"
-}
-
-function estimateRevenueUpside(revenue: string, manualWork: string) {
-  const highManual = manualWork.includes("25 - 50") || manualWork.includes("50+")
-
-  if (revenue.includes("$0 - $5k")) return highManual ? "$500–$1,500/mo" : "$200–$800/mo"
-  if (revenue.includes("$5k - $25k")) return highManual ? "$1,500–$4,000/mo" : "$700–$2,000/mo"
-  if (revenue.includes("$25k - $100k")) return highManual ? "$3,000–$8,000/mo" : "$1,500–$4,500/mo"
-  if (revenue.includes("$100k - $500k")) return highManual ? "$8,000–$20,000/mo" : "$4,000–$10,000/mo"
-  if (revenue.includes("$500k+")) return highManual ? "$20,000+/mo" : "$8,000–$18,000/mo"
-
-  return highManual ? "$3,000–$8,000/mo" : "$1,000–$4,000/mo"
-}
-
-function getMaturityStage(score: number, opportunityScore: number) {
-  if (score >= 75 && opportunityScore >= 75) return "Automation-Ready"
-  if (score < 55 && opportunityScore >= 75) return "Manual but Highly Automatable"
-  if (score >= 65) return "AI-Assisted Operations"
-
-  return "Early AI Readiness"
-}
-
-function getRiskLevel(data: Record<string, string>) {
-  if (
-    data.data_quality === "We barely track anything" ||
-    data.data_quality === "Not confident"
-  ) {
-    return "Medium-High"
-  }
-
-  if (data.tools?.includes("Not sure")) return "Medium"
-
-  return "Low-Medium"
-}
-
-function PageStyles() {
+function PillCard({ label, value }: { label: string; value: string }) {
   return (
-    <style>{`
-      .page {
-        min-height: 100vh;
-        background:
-          radial-gradient(circle at top right, rgba(14,165,255,0.18), transparent 35%),
-          radial-gradient(circle at bottom left, rgba(37,99,235,0.16), transparent 35%),
-          linear-gradient(180deg, #061528, #020b1c);
-        color: white;
-        font-family: Arial, sans-serif;
-        padding-bottom: 70px;
-      }
+    <div className="ns-report-pill-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
 
-      .hero {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 80px 24px 40px;
-        text-align: center;
-      }
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="ns-report-detail-row">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
 
-      .card {
-        max-width: 760px;
-        margin: 90px auto;
-        background: rgba(7, 20, 42, 0.88);
-        border: 1px solid rgba(255,255,255,0.14);
-        border-radius: 24px;
-        padding: 44px;
-        box-shadow: 0 0 50px rgba(0,0,0,0.45);
-        text-align: center;
-      }
-
-      .badge {
-        color: #7dd3fc;
-        letter-spacing: 2px;
-        font-size: 13px;
-        font-weight: 900;
-        margin-bottom: 14px;
-        text-transform: uppercase;
-      }
-
-      .center {
-        text-align: center;
-      }
-
-      .hero h1 {
-        margin: 0;
-        font-size: clamp(42px, 6vw, 76px);
-        line-height: 1;
-        font-weight: 900;
-        background: linear-gradient(135deg, #fff, #7dd3fc, #0ea5ff);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .subtitle {
-        max-width: 780px;
-        margin: 24px auto 42px;
-        font-size: 21px;
-        line-height: 1.5;
-        color: rgba(255,255,255,0.76);
-      }
-
-      .scoreGrid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 18px;
-      }
-
-      .scoreCard,
-      .summaryCard,
-      .mainCard,
-      .smallCard,
-      .automationCard,
-      .roadmapItem,
-      .nextStep {
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(125,211,252,0.18);
-        border-radius: 22px;
-        box-shadow: 0 0 36px rgba(0,0,0,0.24);
-        backdrop-filter: blur(14px);
-      }
-
-      .scoreCard {
-        padding: 26px;
-      }
-
-      .scoreCard p {
-        margin: 0 0 12px;
-        color: rgba(255,255,255,0.65);
-        font-weight: 700;
-      }
-
-      .scoreCard h2 {
-        margin: 0;
-        font-size: 30px;
-        color: #7dd3fc;
-      }
-
-      .section {
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 54px 24px;
-      }
-
-      .section.alt {
-        max-width: none;
-        padding-left: max(24px, calc((100vw - 1180px) / 2));
-        padding-right: max(24px, calc((100vw - 1180px) / 2));
-        background: rgba(255,255,255,0.025);
-        border-top: 1px solid rgba(255,255,255,0.08);
-        border-bottom: 1px solid rgba(255,255,255,0.08);
-      }
-
-      .sectionTitle {
-        text-align: center;
-        margin: 0 0 34px;
-        font-size: clamp(32px, 4vw, 52px);
-      }
-
-      .summaryCard {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        padding: 28px;
-      }
-
-      .label {
-        margin: 0 0 8px;
-        color: #7dd3fc;
-        font-size: 13px;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-      }
-
-      .summaryCard h2 {
-        margin: 0;
-        font-size: 24px;
-      }
-
-      .mainCard {
-        padding: 34px;
-      }
-
-      .mainCard h2 {
-        margin: 0 0 16px;
-        font-size: 34px;
-      }
-
-      .largeMuted {
-        margin: 0;
-        color: rgba(255,255,255,0.76);
-        font-size: 20px;
-        line-height: 1.55;
-      }
-
-      .problemGrid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 18px;
-      }
-
-      .smallCard {
-        padding: 24px;
-      }
-
-      .smallCard strong {
-        color: #7dd3fc;
-      }
-
-      .smallCard p {
-        color: rgba(255,255,255,0.72);
-        line-height: 1.55;
-      }
-
-      .automationGrid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 22px;
-      }
-
-      .automationCard {
-        padding: 28px;
-      }
-
-      .rank {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 44px;
-        height: 44px;
-        border-radius: 999px;
-        background: rgba(14,165,255,0.12);
-        border: 1px solid rgba(125,211,252,0.35);
-        color: #7dd3fc;
-        font-weight: 900;
-        margin-bottom: 18px;
-      }
-
-      .automationCard h3 {
-        margin: 0 0 14px;
-        font-size: 26px;
-      }
-
-      .muted {
-        color: rgba(255,255,255,0.72);
-        line-height: 1.55;
-      }
-
-      .miniGrid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-        margin-top: 20px;
-      }
-
-      .miniGrid div {
-        border-radius: 16px;
-        background: rgba(14,165,255,0.08);
-        border: 1px solid rgba(125,211,252,0.16);
-        padding: 16px;
-      }
-
-      .miniGrid span {
-        display: block;
-        color: rgba(255,255,255,0.58);
-        margin-bottom: 8px;
-      }
-
-      .miniGrid strong {
-        color: white;
-      }
-
-      .roadmap {
-        display: grid;
-        gap: 18px;
-      }
-
-      .roadmapItem {
-        padding: 24px;
-        display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 20px;
-        align-items: center;
-      }
-
-      .roadmapItem span {
-        color: #7dd3fc;
-        font-weight: 900;
-      }
-
-      .roadmapItem p {
-        margin: 0;
-        color: rgba(255,255,255,0.78);
-        line-height: 1.5;
-      }
-
-      .nextStep {
-        padding: 34px;
-        background:
-          linear-gradient(135deg, rgba(14,165,255,0.18), rgba(37,99,235,0.12));
-        border: 1px solid rgba(14,165,255,0.3);
-      }
-
-      .nextStep h2 {
-        margin: 0 0 16px;
-        font-size: 34px;
-      }
-
-      .nextStep p {
-        color: rgba(255,255,255,0.76);
-        font-size: 18px;
-        line-height: 1.55;
-      }
-
-      .actionRow {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-top: 26px;
-      }
-
-      .cta,
-      .secondaryCta {
-        display: inline-block;
-        padding: 16px 30px;
-        border-radius: 999px;
-        font-size: 16px;
-        font-weight: 900;
-        text-decoration: none;
-        cursor: pointer;
-      }
-
-      .cta {
-        border: none;
-        background: linear-gradient(135deg, #0ea5ff, #2563eb);
-        color: white;
-        box-shadow: 0 0 32px rgba(14,165,255,0.45);
-      }
-
-      .secondaryCta {
-        border: 1px solid rgba(125,211,252,0.3);
-        background: rgba(255,255,255,0.045);
-        color: white;
-      }
-
-      .disclaimer {
-        max-width: 900px;
-        margin: 30px auto 0;
-        padding: 0 24px;
-        font-size: 13px;
-        color: rgba(255,255,255,0.6);
-        text-align: center;
-        line-height: 1.5;
-      }
-
-      @media (max-width: 900px) {
-        .scoreGrid,
-        .summaryCard,
-        .problemGrid,
-        .automationGrid {
-          grid-template-columns: 1fr;
-        }
-
-        .roadmapItem {
-          grid-template-columns: 1fr;
-          gap: 8px;
-        }
-
-        .hero {
-          padding-top: 56px;
-        }
-
-        .card {
-          margin: 50px 20px;
-          padding: 30px;
-        }
-
-        .actionRow {
-          flex-direction: column;
-        }
-
-        .cta,
-        .secondaryCta {
-          text-align: center;
-        }
-      }
-    `}</style>
+function ReportPanel({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="ns-report-panel">
+      <div className="ns-report-panel-header">
+        <h2>{title}</h2>
+      </div>
+      {children}
+    </div>
   )
 }

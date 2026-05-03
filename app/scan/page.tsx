@@ -1,339 +1,608 @@
 "use client"
 
-import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
-type QuestionType = "single" | "multi" | "text" | "email"
+type FormState = {
+  email: string
+  businessType: string
+  monthlyRevenue: string
+  averageOrderValue: string
+  monthlyOrderVolume: string
+  teamSize: string
+  tools: string[]
+  marketingChannels: string[]
 
-type Question = {
-  key: string
-  type: QuestionType
+  mainGoal: string
+  growthConstraint: string
+  biggestBottleneck: string
+
+  manualWorkflow: string
+  weeklyManualWork: string
+  customerSupportVolume: string
+  repeatPurchaseRate: string
+  reportingFrequency: string
+  inventoryComplexity: string
+  returnsIssue: string
+  contentProductionLoad: string
+  adTestingProcess: string
+
+  dataConfidence: string
+  currentAiUsage: string
+  automationPriority: string
+  approvalLevel: string
+  urgency: string
+  operations: string
+}
+
+type StepDef = {
+  key: keyof FormState
+  eyebrow: string
   title: string
-  subtitle?: string
-  options?: string[]
+  description: string
+  kind: "input" | "select" | "multiselect" | "textarea"
   placeholder?: string
+  options?: string[]
   required?: boolean
 }
 
-type Answers = Record<string, string | string[]>
+const initialForm: FormState = {
+  email: "",
+  businessType: "",
+  monthlyRevenue: "",
+  averageOrderValue: "",
+  monthlyOrderVolume: "",
+  teamSize: "",
+  tools: [],
+  marketingChannels: [],
 
-const questions: Question[] = [
+  mainGoal: "",
+  growthConstraint: "",
+  biggestBottleneck: "",
+
+  manualWorkflow: "",
+  weeklyManualWork: "",
+  customerSupportVolume: "",
+  repeatPurchaseRate: "",
+  reportingFrequency: "",
+  inventoryComplexity: "",
+  returnsIssue: "",
+  contentProductionLoad: "",
+  adTestingProcess: "",
+
+  dataConfidence: "",
+  currentAiUsage: "",
+  automationPriority: "",
+  approvalLevel: "",
+  urgency: "",
+  operations: "",
+}
+
+const scanSteps: StepDef[] = [
   {
     key: "email",
-    type: "email",
+    eyebrow: "Email",
     title: "Where should we send your automation report?",
-    subtitle: "We use this only to identify your report.",
+    description: "We use this to identify your report and connect the diagnostic to your submission.",
+    kind: "input",
     placeholder: "you@company.com",
     required: true,
   },
   {
-    key: "business_type",
-    type: "single",
-    title: "What type of business are you running?",
+    key: "businessType",
+    eyebrow: "Business model",
+    title: "What kind of ecommerce business do you run?",
+    description: "Different ecommerce models usually have different automation priorities.",
+    kind: "select",
+    required: true,
     options: [
-      "E-Commerce Store",
-      "Marketing Agency",
-      "SaaS / Software",
-      "Local Service Business",
-      "Consulting / Professional Services",
+      "Fashion / apparel",
+      "Beauty / skincare",
+      "Food / beverage",
+      "Home goods",
+      "Health / wellness",
+      "Supplements",
+      "Electronics",
+      "Pet products",
+      "Digital products",
+      "General ecommerce",
       "Other",
     ],
-    required: true,
   },
   {
-    key: "monthly_revenue",
-    type: "single",
+    key: "monthlyRevenue",
+    eyebrow: "Revenue",
     title: "What is your approximate monthly revenue?",
-    subtitle: "This helps estimate potential ROI.",
-    options: [
-      "$0 - $5k",
-      "$5k - $25k",
-      "$25k - $100k",
-      "$100k - $500k",
-      "$500k+",
-      "Prefer not to say",
-    ],
+    description: "This helps estimate automation upside and the right level of implementation effort.",
+    kind: "select",
     required: true,
+    options: [
+      "Under $10k",
+      "$10k-$25k",
+      "$25k-$50k",
+      "$50k-$100k",
+      "$100k-$250k",
+      "$250k-$500k",
+      "$500k+",
+    ],
   },
   {
-    key: "team_size",
-    type: "single",
-    title: "How many people work in or on the business?",
+    key: "averageOrderValue",
+    eyebrow: "Order value",
+    title: "What is your average order value?",
+    description: "AOV helps identify whether the biggest opportunity is retention, conversion, upsells, or support efficiency.",
+    kind: "select",
+    required: true,
     options: [
-      "Just me",
-      "2 - 5 people",
-      "6 - 15 people",
-      "16 - 50 people",
+      "Under $25",
+      "$25-$50",
+      "$50-$100",
+      "$100-$200",
+      "$200-$500",
+      "$500+",
+      "Not sure",
+    ],
+  },
+  {
+    key: "monthlyOrderVolume",
+    eyebrow: "Order volume",
+    title: "How many orders do you process per month?",
+    description: "Order volume affects support load, fulfillment complexity, and automation impact.",
+    kind: "select",
+    required: true,
+    options: [
+      "Under 100",
+      "100-500",
+      "500-1,000",
+      "1,000-5,000",
+      "5,000+",
+      "Not sure",
+    ],
+  },
+  {
+    key: "teamSize",
+    eyebrow: "Team size",
+    title: "How large is your team?",
+    description: "Smaller teams usually benefit most from removing repetitive admin and customer-facing work first.",
+    kind: "select",
+    required: true,
+    options: [
+      "Solo founder",
+      "2-5 people",
+      "6-15 people",
+      "16-50 people",
       "50+ people",
     ],
-    required: true,
   },
   {
     key: "tools",
-    type: "multi",
+    eyebrow: "Tools",
     title: "Which tools are already part of your workflow?",
-    subtitle: "Select all that apply.",
+    description: "Select everything you currently use. This helps recommend automations that fit your current stack.",
+    kind: "multiselect",
+    required: true,
     options: [
       "Shopify",
       "WooCommerce",
       "Klaviyo",
       "Mailchimp",
-      "HubSpot",
-      "GoHighLevel",
-      "Google Analytics",
-      "Meta Ads",
-      "TikTok Ads",
-      "Zapier",
-      "Make",
-      "Notion",
-      "Airtable",
-      "Google Sheets",
-      "Slack",
-      "Zendesk",
       "Gorgias",
-      "Stripe",
-      "QuickBooks",
-      "Not sure",
+      "Zendesk",
+      "Make",
+      "Zapier",
+      "Google Sheets",
+      "Airtable",
+      "Meta Ads",
+      "Google Ads",
+      "TikTok Ads",
+      "HubSpot",
+      "Notion",
+      "Other",
     ],
-    required: true,
   },
   {
-    key: "marketing_channels",
-    type: "multi",
-    title: "Which marketing channels do you currently use?",
+    key: "marketingChannels",
+    eyebrow: "Channels",
+    title: "Which channels currently drive traffic or sales?",
+    description: "This helps identify whether your best first automation is acquisition, retention, reporting, or support.",
+    kind: "multiselect",
+    required: true,
     options: [
-      "Meta ads",
-      "Google ads",
-      "TikTok ads",
+      "Email",
+      "SMS",
+      "Meta Ads",
+      "Google Ads",
+      "TikTok",
+      "Instagram",
       "SEO",
-      "Email marketing",
-      "SMS marketing",
-      "Influencers / UGC",
-      "Organic social media",
-      "Affiliate marketing",
-      "None yet",
+      "Influencers",
+      "Amazon",
+      "Wholesale",
+      "Organic social",
+      "Referral / affiliate",
     ],
-    required: true,
   },
   {
-    key: "biggest_bottleneck",
-    type: "single",
-    title: "Where is the business leaking the most money or time?",
-    options: [
-      "Low website conversion",
-      "Expensive ad costs",
-      "Weak follow-up",
-      "Poor customer retention",
-      "Slow customer support",
-      "Manual reporting",
-      "No clear tracking",
-      "Too many disconnected tools",
-      "I am not sure",
-    ],
+    key: "mainGoal",
+    eyebrow: "Main goal",
+    title: "What is the main business outcome you want right now?",
+    description: "The report will prioritize automation opportunities around this outcome.",
+    kind: "select",
     required: true,
+    options: [
+      "Increase revenue",
+      "Improve profit margin",
+      "Save team time",
+      "Reduce customer support workload",
+      "Improve retention",
+      "Improve ad performance",
+      "Scale without hiring",
+      "Get better reporting",
+    ],
   },
   {
-    key: "manual_workflow",
-    type: "multi",
-    title: "Where does your team spend the most manual time?",
-    subtitle: "Pick the workflows that feel repetitive.",
-    options: [
-      "Reporting",
-      "Email/SMS follow-up",
-      "Customer support",
-      "Lead qualification",
-      "Ad creative/copy",
-      "Content creation",
-      "Product descriptions",
-      "Data entry",
-      "Client onboarding",
-      "Sales follow-up",
-      "Inventory/order operations",
-    ],
+    key: "growthConstraint",
+    eyebrow: "Growth constraint",
+    title: "What is currently limiting growth the most?",
+    description: "This helps separate revenue problems from operational problems.",
+    kind: "select",
     required: true,
+    options: [
+      "Traffic is too expensive",
+      "Conversion rate is too low",
+      "Customers do not buy again",
+      "Support volume is too high",
+      "Reporting is too manual",
+      "Fulfillment / operations are messy",
+      "Content production is too slow",
+      "I do not know what is limiting growth",
+    ],
   },
   {
-    key: "weekly_manual_work",
-    type: "single",
-    title: "How much repetitive manual work happens each week?",
-    options: [
-      "Less than 5 hours",
-      "5 - 10 hours",
-      "10 - 25 hours",
-      "25 - 50 hours",
-      "50+ hours",
-      "Not sure",
-    ],
+    key: "biggestBottleneck",
+    eyebrow: "Bottleneck",
+    title: "Where does the business feel most stuck operationally?",
+    description: "Choose the area where speed, consistency, or scale breaks down most often.",
+    kind: "select",
     required: true,
-  },
-  {
-    key: "data_confidence",
-    type: "single",
-    title: "How confident are you in your current business data?",
     options: [
-      "Very confident",
-      "Somewhat confident",
-      "Not confident",
-      "We barely track anything",
-      "Not sure",
-    ],
-    required: true,
-  },
-  {
-    key: "current_ai_usage",
-    type: "single",
-    title: "How are you currently using AI?",
-    options: [
-      "Not using AI yet",
-      "Using ChatGPT manually",
-      "Using a few AI tools",
-      "Using AI automations already",
-      "Using AI across multiple workflows",
-    ],
-    required: true,
-  },
-  {
-    key: "automation_priority",
-    type: "single",
-    title: "What would you most like AI to automate first?",
-    options: [
-      "Reports",
-      "Emails/SMS",
+      "Customer follow-up",
       "Support replies",
-      "Lead follow-up",
-      "Ads/content",
-      "Product pages",
-      "Internal admin",
-      "Customer retention",
-      "Not sure",
+      "Reporting and insights",
+      "Ad performance",
+      "Content production",
+      "Operations / admin",
+      "Inventory / fulfillment",
+      "Returns / exchanges",
+      "Lead qualification",
+      "Retention",
     ],
-    required: true,
   },
   {
-    key: "approval_level",
-    type: "single",
-    title: "How much human approval should AI outputs require?",
-    subtitle: "This helps calculate risk level.",
-    options: [
-      "Always require human approval",
-      "Only customer-facing outputs",
-      "Only financial/legal-sensitive outputs",
-      "No approval, we want full automation",
-    ],
+    key: "manualWorkflow",
+    eyebrow: "Manual workflow",
+    title: "What repetitive task is still being done manually?",
+    description: "Describe one repeated workflow that eats time every week.",
+    kind: "textarea",
     required: true,
+    placeholder:
+      "Example: Every Monday I manually pull Shopify, Klaviyo, and ad data into a spreadsheet and summarize the numbers.",
+  },
+  {
+    key: "weeklyManualWork",
+    eyebrow: "Time cost",
+    title: "How much manual work does that create each week?",
+    description: "This helps estimate time savings and implementation priority.",
+    kind: "select",
+    required: true,
+    options: [
+      "Under 5 hours",
+      "5-10 hours",
+      "10-20 hours",
+      "20-30 hours",
+      "30+ hours",
+    ],
+  },
+  {
+    key: "customerSupportVolume",
+    eyebrow: "Support load",
+    title: "How much customer support volume do you handle?",
+    description: "Support volume helps determine whether an AI support assistant should be prioritized.",
+    kind: "select",
+    required: true,
+    options: [
+      "Very low - a few messages per week",
+      "Low - a few messages per day",
+      "Medium - 10-50 tickets per day",
+      "High - 50+ tickets per day",
+      "Not sure",
+    ],
+  },
+  {
+    key: "repeatPurchaseRate",
+    eyebrow: "Retention",
+    title: "How strong is your repeat purchase behavior?",
+    description: "Retention issues often point toward email/SMS automation, segmentation, and post-purchase workflows.",
+    kind: "select",
+    required: true,
+    options: [
+      "Weak - most customers buy once",
+      "Average - some customers return",
+      "Strong - repeat customers are important",
+      "Not sure",
+      "Not applicable",
+    ],
+  },
+  {
+    key: "reportingFrequency",
+    eyebrow: "Reporting",
+    title: "How do you currently review performance?",
+    description: "Manual reporting and scattered metrics are common automation opportunities.",
+    kind: "select",
+    required: true,
+    options: [
+      "I rarely review reports",
+      "I check dashboards manually",
+      "I build weekly reports manually",
+      "Someone on the team prepares reports",
+      "Reporting is already automated",
+      "Not sure",
+    ],
+  },
+  {
+    key: "inventoryComplexity",
+    eyebrow: "Inventory",
+    title: "How complex is inventory or fulfillment?",
+    description: "Inventory and fulfillment complexity can affect which automations are safe to start with.",
+    kind: "select",
+    required: true,
+    options: [
+      "Simple - few products",
+      "Moderate - multiple SKUs",
+      "Complex - many SKUs or variants",
+      "Difficult - stockouts or fulfillment issues happen often",
+      "Not applicable",
+    ],
+  },
+  {
+    key: "returnsIssue",
+    eyebrow: "Returns",
+    title: "Are returns, exchanges, or order issues a problem?",
+    description: "Returns and order-status requests can create major support and operations drag.",
+    kind: "select",
+    required: true,
+    options: [
+      "Not a major issue",
+      "Somewhat manual",
+      "Frequent customer questions",
+      "High return/exchange workload",
+      "Not sure",
+    ],
+  },
+  {
+    key: "contentProductionLoad",
+    eyebrow: "Content",
+    title: "How heavy is your content production workload?",
+    description: "Content bottlenecks can point toward AI-assisted product copy, email, social, and ad creative workflows.",
+    kind: "select",
+    required: true,
+    options: [
+      "Low - content is manageable",
+      "Medium - content takes time",
+      "High - content slows marketing down",
+      "Very high - we constantly need new creative",
+      "Not a priority",
+    ],
+  },
+  {
+    key: "adTestingProcess",
+    eyebrow: "Ad testing",
+    title: "How structured is your ad testing process?",
+    description: "If campaigns or creatives are reviewed manually, an AI-assisted testing workflow may be high leverage.",
+    kind: "select",
+    required: true,
+    options: [
+      "No structured testing process",
+      "We test occasionally",
+      "We test regularly but analysis is manual",
+      "We have a strong testing process",
+      "We do not run ads",
+    ],
+  },
+  {
+    key: "dataConfidence",
+    eyebrow: "Data quality",
+    title: "How confident are you in your current data quality?",
+    description: "Clean, reliable data lowers automation risk.",
+    kind: "select",
+    required: true,
+    options: [
+      "Low - messy or scattered",
+      "Medium - usable but imperfect",
+      "High - clean and organized",
+      "Not sure",
+    ],
+  },
+  {
+    key: "currentAiUsage",
+    eyebrow: "Current AI usage",
+    title: "How much AI are you already using today?",
+    description: "This helps judge readiness and likely speed of implementation.",
+    kind: "select",
+    required: true,
+    options: [
+      "None",
+      "Occasional ChatGPT use",
+      "AI tools in marketing",
+      "AI tools in operations",
+      "Multiple AI workflows already",
+    ],
+  },
+  {
+    key: "automationPriority",
+    eyebrow: "Automation priority",
+    title: "What should the first automation accomplish?",
+    description: "Choose the main outcome you want from the first workflow.",
+    kind: "select",
+    required: true,
+    options: [
+      "Save time",
+      "Increase revenue",
+      "Improve customer experience",
+      "Reduce errors",
+      "Improve reporting",
+      "Scale without hiring",
+    ],
+  },
+  {
+    key: "approvalLevel",
+    eyebrow: "Approval level",
+    title: "How much human approval should the workflow keep?",
+    description: "This helps estimate risk and how aggressive the first automation should be.",
+    kind: "select",
+    required: true,
+    options: [
+      "Human approval before anything sends",
+      "Human review for sensitive tasks only",
+      "Mostly automated once tested",
+      "Not sure yet",
+    ],
   },
   {
     key: "urgency",
-    type: "single",
-    title: "How soon do you want to improve this?",
-    options: [
-      "Immediately",
-      "Within 30 days",
-      "Within 90 days",
-      "This year",
-      "Just exploring",
-    ],
+    eyebrow: "Urgency",
+    title: "How soon do you want to act on this?",
+    description: "Urgency influences what we recommend as the first practical move.",
+    kind: "select",
     required: true,
+    options: [
+      "Immediate",
+      "This month",
+      "This quarter",
+      "Exploring for later",
+    ],
   },
   {
     key: "operations",
-    type: "text",
-    title: "Briefly describe your business operations.",
-    subtitle: "Mention what you sell, how you market, and what feels manual or messy.",
-    placeholder:
-      "Example: We sell skincare through Shopify, run Meta ads, use Klaviyo, answer support manually, and build weekly reports in spreadsheets.",
+    eyebrow: "Operations",
+    title: "Describe your current operation in your own words.",
+    description: "Give enough context for the report to feel specific, not generic.",
+    kind: "textarea",
     required: true,
+    placeholder:
+      "Describe your store, tools, repeated tasks, bottlenecks, customer flow, reporting process, marketing workflow, and where work gets stuck.",
   },
 ]
 
 export default function ScanPage() {
   const router = useRouter()
-
-  const [step, setStep] = useState(0)
-  const [answers, setAnswers] = useState<Answers>({})
-  const [loading, setLoading] = useState(false)
+  const [stepIndex, setStepIndex] = useState(0)
+  const [form, setForm] = useState<FormState>(initialForm)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const current = questions[step]
-  const progress = Math.round(((step + 1) / questions.length) * 100)
+  const step = scanSteps[stepIndex]
+  const isLastStep = stepIndex === scanSteps.length - 1
+  const progress = Math.round(((stepIndex + 1) / scanSteps.length) * 100)
 
-  function currentValue() {
-    return answers[current.key]
-  }
-
-  function hasAnswer() {
-    const value = currentValue()
-
-    if (!current.required) return true
-    if (!value) return false
-    if (Array.isArray(value)) return value.length > 0
-    return value.trim().length > 0
-  }
-
-  function setSingleAnswer(value: string) {
-    setAnswers((prev) => ({
-      ...prev,
-      [current.key]: value,
+  function updateStringField(key: keyof FormState, value: string) {
+    setForm((previous) => ({
+      ...previous,
+      [key]: value,
     }))
   }
 
-  function toggleMultiAnswer(value: string) {
-    const existing = answers[current.key]
-    const list = Array.isArray(existing) ? existing : []
+  function toggleArrayValue(key: "tools" | "marketingChannels", value: string) {
+    setForm((previous) => {
+      const exists = previous[key].includes(value)
 
-    const next = list.includes(value)
-      ? list.filter((item) => item !== value)
-      : [...list, value]
-
-    setAnswers((prev) => ({
-      ...prev,
-      [current.key]: next,
-    }))
+      return {
+        ...previous,
+        [key]: exists
+          ? previous[key].filter((item) => item !== value)
+          : [...previous[key], value],
+      }
+    })
   }
 
-  function isSelected(option: string) {
-    const value = currentValue()
-
-    if (Array.isArray(value)) return value.includes(option)
-
-    return value === option
-  }
-
-  function nextStep() {
+  function validateCurrentStep() {
     setError("")
 
-    if (!hasAnswer()) {
-      setError("Please answer this question before continuing.")
-      return
+    const value = form[step.key]
+
+    if (!step.required) return true
+
+    if (step.kind === "input" || step.kind === "select" || step.kind === "textarea") {
+      if (typeof value !== "string" || !value.trim()) {
+        setError("Answer this question to continue.")
+        return false
+      }
     }
 
-    if (step < questions.length - 1) {
-      setStep(step + 1)
-      return
+    if (step.kind === "multiselect") {
+      if (!Array.isArray(value) || value.length === 0) {
+        setError("Select at least one option to continue.")
+        return false
+      }
     }
 
-    submitAudit()
+    if (step.key === "email") {
+      const email = String(value).trim()
+
+      if (!email.includes("@") || !email.includes(".")) {
+        setError("Enter a valid email address.")
+        return false
+      }
+    }
+
+    if (step.key === "manualWorkflow" && String(value).trim().length < 12) {
+      setError("Add a little more detail about the manual workflow.")
+      return false
+    }
+
+    if (step.key === "operations" && String(value).trim().length < 30) {
+      setError("Add more detail so the report can be specific.")
+      return false
+    }
+
+    return true
   }
 
-  function previousStep() {
+  async function handleNext() {
+    if (!validateCurrentStep()) return
+
+    if (!isLastStep) {
+      setStepIndex((previous) => previous + 1)
+      return
+    }
+
+    await submitDiagnostic()
+  }
+
+  function handleBack() {
     setError("")
-
-    if (step === 0) {
-      router.push("/")
-      return
-    }
-
-    setStep(step - 1)
+    setStepIndex((previous) => Math.max(0, previous - 1))
   }
 
-  async function submitAudit() {
+  async function submitDiagnostic() {
     setLoading(true)
     setError("")
 
-    try {
-      const payload = normalizeAnswers(answers)
+    const payload = {
+      ...form,
 
-      const res = await fetch("/api/audit", {
+      business_model: form.businessType,
+      monthly_revenue: form.monthlyRevenue,
+      team_size: form.teamSize,
+      biggest_problem: form.biggestBottleneck,
+      manual_work: form.manualWorkflow,
+      data_quality: form.dataConfidence,
+      automation_interest: form.automationPriority,
+    }
+
+    try {
+      const response = await fetch("/api/audit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -341,470 +610,198 @@ export default function ScanPage() {
         body: JSON.stringify(payload),
       })
 
-      const data = await res.json()
+      const data = await response.json()
 
-      if (!res.ok) {
-        console.error("Audit API failed:", data)
-        throw new Error(data?.error || "Audit failed")
+      if (!response.ok) {
+        throw new Error(data?.error || "Could not generate report.")
       }
 
-      sessionStorage.setItem("auditResult", JSON.stringify(data))
-      sessionStorage.setItem("auditAnswers", JSON.stringify(payload))
+      window.sessionStorage.setItem("auditResult", JSON.stringify(data))
+      window.sessionStorage.setItem("auditAnswers", JSON.stringify(payload))
 
-      router.push("/results")
+      router.push("/results?generated=true")
     } catch (err) {
-      console.error("Submit error:", err)
-      setError("Failed to generate the report. Please try again.")
+      console.error(err)
+      setError("Something went wrong generating your report. Try again.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="page">
-      <section className="shell">
-        <div className="topBar">
-          <a href="/" className="brand">
-            Nexum Strategy
-          </a>
+    <main className="ns-page ns-scan-page">
+      <Background />
 
-          <div className="progressMeta">
+      <section className="ns-scan-shell">
+        <div className="ns-scan-topbar">
+          <Link href="/" className="ns-scan-brand">
+            Nexum Strategy
+          </Link>
+
+          <div className="ns-scan-step-meta">
             <span>
-              Step {step + 1} of {questions.length}
+              Step {stepIndex + 1} of {scanSteps.length}
             </span>
             <strong>{progress}%</strong>
           </div>
         </div>
 
-        <div className="progressTrack">
-          <div className="progressFill" style={{ width: `${progress}%` }} />
+        <div className="ns-scan-progress">
+          <div
+            className="ns-scan-progress-fill"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
-        <div className="layout">
-          <aside className="sidePanel">
-            <p className="eyebrow">AI Automation Diagnostic</p>
-            <h1>Generate your automation report.</h1>
-            <p>
-              Answer a short sequence of questions so Nexum can identify your
-              highest-value AI automation opportunities, risks, and next steps.
+        <div className="ns-scan-grid">
+          <aside className="ns-scan-sidecard">
+            <p className="ns-scan-kicker">AI Automation Diagnostic</p>
+
+            <h1 className="ns-scan-side-title">
+              Generate your <span>automation</span> report.
+            </h1>
+
+            <p className="ns-scan-side-copy">
+              Answer a focused sequence of ecommerce questions so Nexum can identify your highest-value AI automation opportunities, risks, and next steps.
             </p>
 
-            <div className="sideStats">
-              <div>
-                <strong>7</strong>
-                <span>Diagnostic areas</span>
+            <div className="ns-scan-side-stats">
+              <div className="ns-scan-stat">
+                <strong>{scanSteps.length}</strong>
+                <span>Diagnostic questions</span>
               </div>
-              <div>
+
+              <div className="ns-scan-stat">
                 <strong>30</strong>
                 <span>Day roadmap</span>
               </div>
-              <div>
+
+              <div className="ns-scan-stat">
                 <strong>0</strong>
                 <span>Payment required</span>
               </div>
             </div>
           </aside>
 
-          <section className="card">
-            <p className="questionType">
-              {current.type === "multi"
-                ? "Select all that apply"
-                : current.type === "text"
-                  ? "Short answer"
-                  : current.type === "email"
-                    ? "Email"
-                    : "Select one"}
-            </p>
+          <div className="ns-scan-formcard">
+            <p className="ns-scan-question-kicker">{step.eyebrow}</p>
 
-            <h2>{current.title}</h2>
+            <h2 className="ns-scan-question-title">{step.title}</h2>
 
-            {current.subtitle && <p className="subtitle">{current.subtitle}</p>}
+            <p className="ns-scan-question-copy">{step.description}</p>
 
-            {current.type === "single" && (
-              <div className="options">
-                {current.options?.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    className={`option ${isSelected(option) ? "selected" : ""}`}
-                    onClick={() => setSingleAnswer(option)}
-                  >
-                    <span>{option}</span>
-                    {isSelected(option) && <strong>✓</strong>}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="ns-scan-control-wrap">
+              {step.kind === "input" && (
+                <input
+                  className="ns-scan-input"
+                  type={step.key === "email" ? "email" : "text"}
+                  value={String(form[step.key] ?? "")}
+                  onChange={(event) =>
+                    updateStringField(step.key, event.target.value)
+                  }
+                  placeholder={step.placeholder}
+                />
+              )}
 
-            {current.type === "multi" && (
-              <div className="options">
-                {current.options?.map((option) => (
-                  <button
-                    type="button"
-                    key={option}
-                    className={`option ${isSelected(option) ? "selected" : ""}`}
-                    onClick={() => toggleMultiAnswer(option)}
-                  >
-                    <span>{option}</span>
-                    {isSelected(option) && <strong>✓</strong>}
-                  </button>
-                ))}
-              </div>
-            )}
+              {step.kind === "select" && (
+                <select
+                  className="ns-scan-input"
+                  value={String(form[step.key] ?? "")}
+                  onChange={(event) =>
+                    updateStringField(step.key, event.target.value)
+                  }
+                >
+                  <option value="">Select one</option>
+                  {step.options?.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              )}
 
-            {current.type === "text" && (
-              <textarea
-                value={(currentValue() as string) || ""}
-                placeholder={current.placeholder}
-                onChange={(e) => setSingleAnswer(e.target.value)}
-              />
-            )}
+              {step.kind === "textarea" && (
+                <textarea
+                  className="ns-scan-textarea"
+                  value={String(form[step.key] ?? "")}
+                  onChange={(event) =>
+                    updateStringField(step.key, event.target.value)
+                  }
+                  placeholder={step.placeholder}
+                  rows={5}
+                />
+              )}
 
-            {current.type === "email" && (
-              <input
-                type="email"
-                value={(currentValue() as string) || ""}
-                placeholder={current.placeholder}
-                onChange={(e) => setSingleAnswer(e.target.value)}
-              />
-            )}
+              {step.kind === "multiselect" && (
+                <div className="ns-scan-options">
+                  {step.options?.map((option) => {
+                    const selected =
+                      step.key === "tools" || step.key === "marketingChannels"
+                        ? form[step.key].includes(option)
+                        : false
 
-            {error && <p className="error">{error}</p>}
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        className={
+                          selected
+                            ? "ns-scan-option ns-scan-option-selected"
+                            : "ns-scan-option"
+                        }
+                        onClick={() => {
+                          if (step.key === "tools" || step.key === "marketingChannels") {
+                            toggleArrayValue(step.key, option)
+                          }
+                        }}
+                      >
+                        {option}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
 
-            <div className="actions">
-              <button type="button" className="back" onClick={previousStep}>
+            {error && <p className="ns-scan-error">{error}</p>}
+
+            <div className="ns-scan-actions">
+              <button
+                type="button"
+                onClick={handleBack}
+                disabled={stepIndex === 0 || loading}
+                className="ns-scan-back"
+              >
                 ← Back
               </button>
 
               <button
                 type="button"
-                className="next"
-                onClick={nextStep}
+                onClick={handleNext}
                 disabled={loading}
+                className="ns-scan-next"
               >
                 {loading
-                  ? "Generating Report..."
-                  : step === questions.length - 1
-                    ? "Generate My Report →"
+                  ? "Generating..."
+                  : isLastStep
+                    ? "Generate Report →"
                     : "Next →"}
               </button>
             </div>
-          </section>
+          </div>
         </div>
       </section>
-
-      <style>{`
-        .page {
-          min-height: 100vh;
-          background:
-            radial-gradient(circle at top right, rgba(14,165,255,0.2), transparent 35%),
-            radial-gradient(circle at bottom left, rgba(37,99,235,0.18), transparent 35%),
-            linear-gradient(180deg, #061528, #020b1c);
-          color: white;
-          font-family: Arial, sans-serif;
-          padding: 28px 20px 60px;
-        }
-
-        .shell {
-          max-width: 1180px;
-          margin: 0 auto;
-        }
-
-        .topBar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 20px;
-          margin-bottom: 18px;
-        }
-
-        .brand {
-          color: white;
-          text-decoration: none;
-          font-weight: 900;
-          letter-spacing: 0.04em;
-        }
-
-        .progressMeta {
-          display: flex;
-          gap: 12px;
-          color: rgba(255,255,255,0.65);
-          font-size: 14px;
-        }
-
-        .progressMeta strong {
-          color: #7dd3fc;
-        }
-
-        .progressTrack {
-          width: 100%;
-          height: 9px;
-          background: rgba(255,255,255,0.1);
-          border-radius: 999px;
-          overflow: hidden;
-          margin-bottom: 38px;
-        }
-
-        .progressFill {
-          height: 100%;
-          background: linear-gradient(135deg, #38bdf8, #2563eb);
-          transition: width 0.25s ease;
-          box-shadow: 0 0 24px rgba(56,189,248,0.45);
-        }
-
-        .layout {
-          display: grid;
-          grid-template-columns: 360px 1fr;
-          gap: 28px;
-          align-items: start;
-        }
-
-        .sidePanel,
-        .card {
-          background: rgba(7, 20, 42, 0.88);
-          border: 1px solid rgba(125,211,252,0.18);
-          border-radius: 28px;
-          box-shadow: 0 0 60px rgba(0,0,0,0.38);
-          backdrop-filter: blur(16px);
-        }
-
-        .sidePanel {
-          padding: 34px;
-          position: sticky;
-          top: 24px;
-        }
-
-        .eyebrow,
-        .questionType {
-          color: #7dd3fc;
-          text-transform: uppercase;
-          font-size: 13px;
-          letter-spacing: 0.16em;
-          font-weight: 900;
-          margin: 0 0 14px;
-        }
-
-        .sidePanel h1 {
-          font-size: clamp(32px, 4vw, 48px);
-          line-height: 1.02;
-          margin: 0 0 20px;
-          background: linear-gradient(135deg, #fff, #7dd3fc, #0ea5ff);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .sidePanel p {
-          color: rgba(255,255,255,0.72);
-          line-height: 1.6;
-          margin: 0;
-        }
-
-        .sideStats {
-          display: grid;
-          gap: 14px;
-          margin-top: 30px;
-        }
-
-        .sideStats div {
-          padding: 16px;
-          border-radius: 18px;
-          border: 1px solid rgba(125,211,252,0.14);
-          background: rgba(255,255,255,0.04);
-        }
-
-        .sideStats strong {
-          display: block;
-          color: #7dd3fc;
-          font-size: 24px;
-        }
-
-        .sideStats span {
-          color: rgba(255,255,255,0.65);
-          font-size: 14px;
-        }
-
-        .card {
-          padding: 38px;
-        }
-
-        .card h2 {
-          margin: 0;
-          font-size: clamp(30px, 4vw, 48px);
-          line-height: 1.1;
-        }
-
-        .subtitle {
-          color: rgba(255,255,255,0.66);
-          font-size: 17px;
-          line-height: 1.5;
-          margin: 14px 0 28px;
-        }
-
-        .options {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 14px;
-          margin-top: 28px;
-        }
-
-        .option {
-          min-height: 66px;
-          border: 1px solid rgba(255,255,255,0.14);
-          background: rgba(255,255,255,0.045);
-          color: white;
-          border-radius: 18px;
-          padding: 18px;
-          text-align: left;
-          font-size: 15px;
-          font-weight: 800;
-          cursor: pointer;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          gap: 14px;
-        }
-
-        .option.selected {
-          border-color: rgba(56,189,248,0.9);
-          background: rgba(14,165,255,0.16);
-          box-shadow: 0 0 28px rgba(14,165,255,0.16);
-        }
-
-        .option strong {
-          color: #7dd3fc;
-        }
-
-        input,
-        textarea {
-          width: 100%;
-          margin-top: 28px;
-          box-sizing: border-box;
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.045);
-          color: white;
-          border-radius: 18px;
-          padding: 18px;
-          font-size: 16px;
-          outline: none;
-        }
-
-        textarea {
-          min-height: 180px;
-          resize: vertical;
-          line-height: 1.5;
-        }
-
-        input:focus,
-        textarea:focus {
-          border-color: rgba(56,189,248,0.75);
-          box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
-        }
-
-        .error {
-          color: #f87171;
-          font-weight: 800;
-          margin: 22px 0 0;
-        }
-
-        .actions {
-          display: flex;
-          justify-content: space-between;
-          gap: 16px;
-          margin-top: 34px;
-        }
-
-        .back,
-        .next {
-          border: none;
-          border-radius: 999px;
-          padding: 16px 28px;
-          font-size: 16px;
-          font-weight: 900;
-          cursor: pointer;
-        }
-
-        .back {
-          background: rgba(255,255,255,0.045);
-          color: white;
-          border: 1px solid rgba(255,255,255,0.14);
-        }
-
-        .next {
-          background: linear-gradient(135deg, #0ea5ff, #2563eb);
-          color: white;
-          box-shadow: 0 0 32px rgba(14,165,255,0.42);
-        }
-
-        .next:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 900px) {
-          .layout {
-            grid-template-columns: 1fr;
-          }
-
-          .sidePanel {
-            position: relative;
-            top: auto;
-          }
-
-          .options {
-            grid-template-columns: 1fr;
-          }
-
-          .topBar {
-            align-items: flex-start;
-            flex-direction: column;
-          }
-
-          .actions {
-            flex-direction: column;
-          }
-
-          .back,
-          .next {
-            width: 100%;
-          }
-        }
-      `}</style>
     </main>
   )
 }
 
-function normalizeAnswers(answers: Answers) {
-  return {
-    email: toStringValue(answers.email),
-    businessType: toStringValue(answers.business_type),
-    monthlyRevenue: toStringValue(answers.monthly_revenue),
-    teamSize: toStringValue(answers.team_size),
-    tools: toStringValue(answers.tools),
-    marketingChannels: toStringValue(answers.marketing_channels),
-    biggestBottleneck: toStringValue(answers.biggest_bottleneck),
-    manualWorkflow: toStringValue(answers.manual_workflow),
-    weeklyManualWork: toStringValue(answers.weekly_manual_work),
-    dataConfidence: toStringValue(answers.data_confidence),
-    currentAiUsage: toStringValue(answers.current_ai_usage),
-    automationPriority: toStringValue(answers.automation_priority),
-    approvalLevel: toStringValue(answers.approval_level),
-    urgency: toStringValue(answers.urgency),
-    operations: toStringValue(answers.operations),
-
-    // Compatibility keys for your current API fallback
-    business_model: toStringValue(answers.business_type),
-    monthly_revenue: toStringValue(answers.monthly_revenue),
-    team_size: toStringValue(answers.team_size),
-    tools_legacy: toStringValue(answers.tools),
-    biggest_problem: toStringValue(answers.biggest_bottleneck),
-    manual_work: toStringValue(answers.weekly_manual_work),
-    data_quality: toStringValue(answers.data_confidence),
-    automation_interest: toStringValue(answers.automation_priority),
-  }
-}
-
-function toStringValue(value: string | string[] | undefined) {
-  if (!value) return ""
-  if (Array.isArray(value)) return value.join(", ")
-  return value
+function Background() {
+  return (
+    <div className="ns-background">
+      <div className="ns-background-image" />
+      <div className="ns-background-overlay" />
+      <div className="ns-glow ns-glow-one" />
+      <div className="ns-glow ns-glow-two" />
+    </div>
+  )
 }

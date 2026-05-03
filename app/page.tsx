@@ -21,7 +21,7 @@ export default function Page() {
           <p className="eyebrow">AI AUTOMATION DIAGNOSTIC FOR ECOMMERCE</p>
 
           <h1>
-            Find what your ecommerce business should automate first.
+            Identify where AI can benefit your ecommerce business.
           </h1>
 
           <p className="heroText">
